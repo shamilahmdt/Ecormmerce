@@ -18,7 +18,7 @@ export const WalletProvider = ({ children }) => {
 
     try {
       const res = await API.get("/wallet");
-      setBalance(res.data.balance || 0);
+      setBalance(Number(res.data.balance) || 0);
     } catch (err) {
       if (err.response?.status !== 401) {
         console.error("Wallet fetch error:", err);

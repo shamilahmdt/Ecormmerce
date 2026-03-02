@@ -17,12 +17,6 @@ const Navbar = () => {
     0
   );
 
-  const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("token");
-    window.location.href = "/auth";
-  };
-
   return (
     <nav className="bg-black text-white flex justify-between items-center p-4">
       <div className="flex space-x-4 items-center">
@@ -36,6 +30,9 @@ const Navbar = () => {
             </Link>
             <Link to="/admin-orders" className="hover:underline">
               All Orders
+            </Link>
+            <Link to="/coupons" className="hover:underline">
+              Coupons
             </Link>
           </>
         )}
@@ -66,17 +63,27 @@ const Navbar = () => {
       </div>
 
       {user && (
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-300">
-            Hi, {user.fullName}
-          </span>
-
-          <button
-            onClick={handleLogout}
-            className="bg-white text-black px-3 py-1 rounded hover:opacity-90"
+        <div className="flex items-center space-x-6">
+          <Link
+            to="/profile"
+            className="group relative flex items-center justify-center"
+            title="My Profile"
           >
-            Logout
-          </button>
+            <div className="w-10 h-10 rounded-full border-2 border-transparent group-hover:border-white transition-all overflow-hidden bg-white/10 flex items-center justify-center p-[2px]">
+              <img
+                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  user.fullName
+                )}&background=random&size=40&rounded=true`}
+                alt="Profile"
+                className="w-full h-full rounded-full object-cover shadow-lg group-hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+            
+            {/* Tooltip on hover */}
+            <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              View Profile
+            </span>
+          </Link>
         </div>
       )}
     </nav>

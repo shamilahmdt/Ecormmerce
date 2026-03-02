@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import AddProduct from "./pages/AddProduct";
 import EditProduct from "./pages/EditProduct";
 import AdminOrderList from "./pages/AdminOrderList";
+import AdminCoupons from "./pages/AdminCoupons";
 import ProtectedRoute from "./Routes/ProtectedRoute";
 import ProductList from "./pages/ProductList";
 import Cart from "./pages/Cart";
@@ -15,6 +16,7 @@ import Wishlist from "./pages/Wishlist";
 import Wallet from "./pages/Wallet";
 import NotAuthorized from "./pages/auth/NotAuthorized";
 import Navbar from "./components/Navbar";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -39,8 +41,9 @@ function App() {
         path="/edit-product/:id"
         element={<ProtectedRoute role="admin"><EditProduct /></ProtectedRoute>}
       />
-      <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>} 
+      <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>}
       />
+       <Route path="/coupons" element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
         {/* User Routes */}
         <Route path="/" element={<ProtectedRoute role="user"><ProductList /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute role="user"><Cart /></ProtectedRoute>} />
@@ -49,6 +52,7 @@ function App() {
         <Route path="/checkout" element={<ProtectedRoute role="user"><CheckOut /></ProtectedRoute>} />
         <Route path="/order-placed"element={<ProtectedRoute role="user"><OrderPlaced /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="user"><OrderList /></ProtectedRoute>}/>
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         {/* Not authorized */}
         <Route path="/not-authorized" element={<NotAuthorized />} />
