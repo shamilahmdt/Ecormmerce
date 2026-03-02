@@ -12,4 +12,19 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
+// ✅ Global Response Interceptor for Unauthorized (401)
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("loggedInUser");
+      if (!window.location.pathname.includes("/auth")) {
+        window.location.href = "/auth";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default API;

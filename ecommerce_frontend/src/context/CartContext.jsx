@@ -19,11 +19,19 @@ export const CartProvider = ({ children }) => {
   // Load cart from Firebase on mount
   useEffect(() => {
     const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setCart([]);
+        return;
+      }
+      
       try {
         const res = await API.get("/cart");
         setCart(res.data.items || []);
       } catch (err) {
-        console.error("Error fetching cart:", err);
+        if (err.response?.status !== 401) {
+          console.error("Error fetching cart:", err);
+        }
       }
     };
 

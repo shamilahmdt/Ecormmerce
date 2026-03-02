@@ -11,9 +11,10 @@ import Cart from "./pages/Cart";
 import CheckOut from "./pages/CheckOut";
 import OrderPlaced from "./pages/OrderPlaced";
 import OrderList from "./pages/OrderList ";
+import Wishlist from "./pages/Wishlist";
+import Wallet from "./pages/Wallet";
 import NotAuthorized from "./pages/auth/NotAuthorized";
 import Navbar from "./components/Navbar";
-
 
 function App() {
   return (
@@ -43,6 +44,8 @@ function App() {
         {/* User Routes */}
         <Route path="/" element={<ProtectedRoute role="user"><ProductList /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute role="user"><Cart /></ProtectedRoute>} />
+        <Route path="/wishlist" element={<ProtectedRoute role="user"><Wishlist /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute role="user"><CheckOut /></ProtectedRoute>} />
         <Route path="/order-placed"element={<ProtectedRoute role="user"><OrderPlaced /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="user"><OrderList /></ProtectedRoute>}/>

@@ -60,8 +60,8 @@ export default function AuthenticationForm() {
 
       toast.success("Login successful!");
 
-      if (user.role === "admin") navigate("/dashboard");
-      else navigate("/");
+      if (user.role === "admin") window.location.href = "/dashboard";
+      else window.location.href = "/";
 
       setPhone("");
       setPassword("");
