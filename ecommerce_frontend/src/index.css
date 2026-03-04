@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 html, body {
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
 }
 
@@ -17,4 +19,13 @@ input[type=number].no-spinner::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number].no-spinner {
   -moz-appearance: textfield;
+}
+
+/* Scrollbar Hide Utility */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

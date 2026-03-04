@@ -2,9 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../../api";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 export default function AuthenticationForm() {
   const navigate = useNavigate();
+  const { mergeCart } = useCart();
+  const { mergeWishlist } = useWishlist();
   const [mode, setMode] = useState("login"); // login | signup | signup-admin
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -37,12 +41,20 @@ export default function AuthenticationForm() {
           adminSecret: role === "admin" ? "superadmin123" : null,
         });
 
-        toast.success("Registration successful!");
-        setMode("login");
-        setPhone("");
-        setPassword("");
-        setFullName("");
-        setConfirmPassword("");
+        toast.success("Registration successful! Logging you in...");
+        
+        // Auto-login after signup to trigger merge
+        const loginRes = await API.post("/login", { phone, password });
+        const { token, refreshToken, user } = loginRes.data;
+        localStorage.setItem("token", token);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
+        
+        await mergeCart();
+        await mergeWishlist();
+
+        if (user.role === "admin") window.location.href = "/dashboard";
+        else window.location.href = "/";
         return;
       }
 
@@ -58,6 +70,10 @@ export default function AuthenticationForm() {
       localStorage.setItem("token", token);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("loggedInUser", JSON.stringify(user));
+
+      // Trigger Merge
+      await mergeCart();
+      await mergeWishlist();
 
       toast.success("Login successful!");
 
@@ -153,6 +169,16 @@ export default function AuthenticationForm() {
               : "Register"}
           </button>
         </form>
+
+        {/* Guest Option */}
+        <div className="mt-4">
+          <button
+            onClick={() => navigate("/")}
+            className="w-full border-2 border-black text-black py-2 rounded font-bold hover:bg-black hover:text-white transition"
+          >
+            Continue as Guest
+          </button>
+        </div>
 
         {/* Footer Links */}
         <div className="text-center mt-4 text-sm text-gray-600">

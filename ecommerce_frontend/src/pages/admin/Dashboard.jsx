@@ -60,40 +60,32 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] p-8 font-sans">
+    <div className="min-h-screen bg-[#F2F2F2] py-6 sm:py-8 px-4 sm:px-8 font-sans overflow-x-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900">
-          PRODUCTS
+      <div className="flex justify-between items-center mb-6 px-1">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase text-gray-900 italic">
+          Admin <span className="text-indigo-600">Inventory</span>
         </h1>
-
-        {/* <div className="space-x-3">
-          <button
-            onClick={() => navigate("/add-product")}
-            className="bg-black text-white px-5 py-2 rounded-lg shadow hover:opacity-90 transition"
-          >
-            + Add Product
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-5 py-2 rounded-lg shadow hover:opacity-90 transition"
-          >
-            Logout
-          </button>
-        </div> */}
+        
+        <button
+          onClick={() => navigate("/add-product")}
+          className="bg-black text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-indigo-100 transition-all font-black text-[10px] sm:text-xs uppercase tracking-widest active:scale-95"
+        >
+          + Add New
+        </button>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         {/* Search */}
         <div className="relative w-full sm:w-1/3">
-          <FaSearch className="absolute top-3 left-3 text-gray-400" />
+          <FaSearch className="absolute top-3 left-3 text-gray-400 text-sm" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded bg-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-black"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm font-bold shadow-sm"
           />
         </div>
 
@@ -103,11 +95,11 @@ const Dashboard = () => {
             <button
               key={tag.label || tag}
               onClick={() => setActiveTag(tag.label || tag)}
-              className={`px-3 py-1 text-xs font-semibold tracking-wider border ${
+              className={`px-4 py-1.5 text-[10px] font-black tracking-widest uppercase border-2 ${
                 activeTag === (tag.label || tag)
-                  ? "bg-black text-white"
-                  : "text-gray-700 border-gray-400"
-              } rounded transition`}
+                  ? "bg-black text-white border-black"
+                  : "text-gray-400 border-gray-100 bg-white hover:border-gray-300"
+              } rounded-xl transition-all shadow-sm`}
             >
               {tag.label || tag}
             </button>
@@ -117,74 +109,70 @@ const Dashboard = () => {
 
       {/* Product Grid */}
       {loading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <GridLoader color="#000" size={25} />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <GridLoader color="#4F46E5" size={15} />
         </div>
       ) : filteredProducts.length === 0 ? (
-        <div className="bg-white p-6 rounded-xl shadow text-center">
-          <p className="text-gray-500">
-            No products available. Start by adding one.
+        <div className="bg-white p-12 rounded-[32px] shadow-sm border border-gray-100 text-center">
+          <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FaSearch className="text-gray-300 text-2xl" />
+          </div>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+            No products match your search.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group"
+              className="bg-white rounded-2xl sm:rounded-[32px] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group border border-gray-100"
             >
               {/* Image Section */}
-              <div className="bg-gray-100 h-64 flex items-center justify-center p-4">
+              <div className="bg-gray-50 h-40 sm:h-64 flex items-center justify-center p-3 sm:p-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/5 transition-colors duration-500"></div>
                 <img
                   src={product.imageUrl || "https://via.placeholder.com/300"}
                   alt={product.name}
-                  className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-110 z-10"
                 />
               </div>
 
               {/* Content Section */}
-              <div className="p-5 flex flex-col flex-grow">
-                <p className="text-xs uppercase text-gray-400 tracking-wide">
-                  {product.category || "Uncategorized"}
-                </p>
+              <div className="p-4 sm:p-6 flex flex-col flex-grow">
+                <div className="flex justify-between items-start mb-1">
+                  <p className="text-[8px] sm:text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                    {product.category || "General"}
+                  </p>
+                  <p className={`text-[8px] sm:text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${product.isOutOfStock ? 'text-red-500 bg-red-50' : 'text-green-500 bg-green-50'}`}>
+                    {product.isOutOfStock ? 'Out of Stock' : 'In Stock'}
+                  </p>
+                </div>
 
-                <h2 className="text-lg font-semibold mt-1 line-clamp-1">
+                <h2 className="text-xs sm:text-lg font-black mt-1 line-clamp-1 text-gray-800 uppercase tracking-tight">
                   {product.name}
                 </h2>
 
-                <p className="text-lg font-bold mt-2">₹ {product.price}</p>
-
-                {/* Variants */}
-                {product.variants?.length > 0 && (
-                  <div className="flex items-center gap-2 mt-3">
-                    {product.variants.slice(0, 4).map((v, i) => (
-                      <span
-                        key={i}
-                        className="w-5 h-5 rounded-full border"
-                        style={{ backgroundColor: v }}
-                      />
-                    ))}
-                  </div>
-                )}
+                <p className="text-sm sm:text-xl font-black mt-1 sm:mt-2 text-indigo-600">₹{product.price.toLocaleString()}</p>
 
                 {/* Actions */}
-                <div className="flex justify-between mt-auto pt-4">
+                <div className="grid grid-cols-2 gap-2 mt-auto pt-4 sm:pt-6">
                   <button
                     onClick={() =>
                       navigate(`/edit-product/${product.id}`, {
                         state: { product },
                       })
                     }
-                    className="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg transition"
+                    className="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-gray-900 border border-gray-900 text-white px-3 py-2 rounded-xl hover:bg-black transition-all active:scale-95"
                   >
                     Edit
                   </button>
 
                   <button
                     onClick={() => handleDelete(product.id)}
-                    className="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg transition"
+                    className="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-white border-2 border-red-50 text-red-500 px-3 py-2 rounded-xl hover:bg-red-50 transition-all active:scale-95"
                   >
-                    Delete
+                    Del
                   </button>
                 </div>
               </div>

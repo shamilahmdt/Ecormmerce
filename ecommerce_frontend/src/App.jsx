@@ -19,46 +19,62 @@ import NotAuthorized from "./pages/auth/NotAuthorized";
 import Navbar from "./components/Navbar";
 import Profile from "./pages/user/Profile";
 
+import GuestHome from "./pages/guest/GuestHome";
+import GuestCart from "./pages/guest/GuestCart";
+import GuestWishlist from "./pages/guest/GuestWishlist";
+
 function App() {
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+
   return (
 
-    <>
-    <Toaster position="top-center" />
-    <Navbar />
-    <Routes>
-      {/* Unified Auth Page */}
-      <Route path="/auth" element={<AuthenticationForm />} />
+    <div className="min-h-screen w-full overflow-x-hidden relative">
+      <Toaster position="top-center" />
+      <Navbar />
+      <Routes>
+        {/* Unified Auth Page */}
+        <Route path="/auth" element={<AuthenticationForm />} />
 
-      {/* Admin page: Dashboard + Products */}
-      <Route
-        path="/dashboard"
-        element={<ProtectedRoute role="admin"><Dashboard /></ProtectedRoute>}
-      />
-      <Route
-        path="/add-product"
-        element={<ProtectedRoute role="admin"><AddProduct /></ProtectedRoute>}
-      />
-      <Route
-        path="/edit-product/:id"
-        element={<ProtectedRoute role="admin"><EditProduct /></ProtectedRoute>}
-      />
-       <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>} />
-       <Route path="/coupons" element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
-       <Route path="/report" element={<ProtectedRoute role="admin"><AdminReport /></ProtectedRoute>} />
-        {/* User Routes */}
-        <Route path="/" element={<ProtectedRoute role="user"><ProductList /></ProtectedRoute>} />
-        <Route path="/cart" element={<ProtectedRoute role="user"><Cart /></ProtectedRoute>} />
-        <Route path="/wishlist" element={<ProtectedRoute role="user"><Wishlist /></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
-        <Route path="/checkout" element={<ProtectedRoute role="user"><CheckOut /></ProtectedRoute>} />
-        <Route path="/order-placed"element={<ProtectedRoute role="user"><OrderPlaced /></ProtectedRoute>} />
-        <Route path="/orders" element={<ProtectedRoute role="user"><OrderList /></ProtectedRoute>}/>
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        {/* Admin page: Dashboard + Products */}
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute role="admin"><Dashboard /></ProtectedRoute>}
+        />
+        <Route
+          path="/add-product"
+          element={<ProtectedRoute role="admin"><AddProduct /></ProtectedRoute>}
+        />
+        <Route
+          path="/edit-product/:id"
+          element={<ProtectedRoute role="admin"><EditProduct /></ProtectedRoute>}
+        />
+         <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>} />
+         <Route path="/coupons" element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
+         <Route path="/report" element={<ProtectedRoute role="admin"><AdminReport /></ProtectedRoute>} />
+          
+          {/* Guest Routes */}
+          <Route path="/guest-home" element={<GuestHome />} />
+          <Route path="/guest-cart" element={<GuestCart />} />
+          <Route path="/guest-wishlist" element={<GuestWishlist />} />
 
-        {/* Not authorized */}
-        <Route path="/not-authorized" element={<NotAuthorized />} />
-    </Routes>
-    </>
+          {/* User Routes (Now handle guest state or redirect internally if needed) */}
+          {/* We'll make / public but it will show ProductList which now works with Guest Contexts */}
+          <Route path="/" element={user ? <ProductList /> : <GuestHome />} />
+          <Route path="/cart" element={user ? <Cart /> : <GuestCart />} />
+          <Route path="/wishlist" element={user ? <Wishlist /> : <GuestWishlist />} />
+          
+          {/* Strictly Protected User Routes */}
+          <Route path="/wallet" element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute role="user"><CheckOut /></ProtectedRoute>} />
+          <Route path="/order-placed"element={<ProtectedRoute role="user"><OrderPlaced /></ProtectedRoute>} />
+          <Route path="/order-placed" element={<ProtectedRoute role="user"><OrderPlaced /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute role="user"><OrderList /></ProtectedRoute>}/>
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
+          {/* Not authorized */}
+          <Route path="/not-authorized" element={<NotAuthorized />} />
+      </Routes>
+    </div>
   );
 }
 

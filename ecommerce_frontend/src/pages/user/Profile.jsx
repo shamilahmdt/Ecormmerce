@@ -292,56 +292,56 @@ const Profile = () => {
               </form>
             ) : (
               /* Profile Info Display */
-              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-indigo-100 p-3 rounded-xl text-indigo-600">
-                      <FaPhone />
+              <div className="mt-8 sm:mt-10 grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6 text-left">
+                <div className="bg-gray-50 p-3 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="bg-indigo-100 p-2 sm:p-3 rounded-lg sm:rounded-xl text-indigo-600">
+                      <FaPhone className="text-sm sm:text-base" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Phone Number</p>
-                      <p className="text-lg font-bold text-gray-700 mt-0.5">{user.phone}</p>
+                      <p className="text-[8px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Phone</p>
+                      <p className="text-xs sm:text-lg font-bold text-gray-700 mt-0.5 break-all">{user.phone}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-green-100 p-3 rounded-xl text-green-600">
-                      <FaWallet />
+                <div className="bg-gray-50 p-3 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div className="bg-green-100 p-2 sm:p-3 rounded-lg sm:rounded-xl text-green-600">
+                      <FaWallet className="text-sm sm:text-base" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Wallet Balance</p>
-                      <p className="text-lg font-bold text-gray-700 mt-0.5">
+                      <p className="text-[8px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Wallet</p>
+                      <p className="text-xs sm:text-lg font-bold text-gray-700 mt-0.5">
                         {user.role === "admin" ? "∞ (Admin)" : `₹${user.walletBalance || 0}`}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group col-span-1 md:col-span-2">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
-                      <FaMapMarkerAlt />
+                <div className="bg-gray-50 p-3 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group col-span-2">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="bg-purple-100 p-2 sm:p-3 rounded-lg sm:rounded-xl text-purple-600 shrink-0">
+                      <FaMapMarkerAlt className="text-sm sm:text-base" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Default Address</p>
-                      <p className="text-lg font-medium text-gray-700 mt-0.5">
-                        {user.address || "No address saved for shipping."}
+                      <p className="text-[8px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Address</p>
+                      <p className="text-xs sm:text-lg font-medium text-gray-700 mt-0.5 line-clamp-2">
+                        {user.address || "No address saved."}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group col-span-1 md:col-span-2">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-pink-100 p-3 rounded-xl text-pink-600">
-                      <FaCalendarAlt />
+                <div className="bg-gray-50 p-3 sm:p-6 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors group col-span-2">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="bg-pink-100 p-2 sm:p-3 rounded-lg sm:rounded-xl text-pink-600 shrink-0">
+                      <FaCalendarAlt className="text-sm sm:text-base" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Last Account Update</p>
-                      <p className="text-lg font-bold text-gray-700 mt-0.5">
-                        {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : "Recently joined!"}
+                      <p className="text-[8px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Last Update</p>
+                      <p className="text-xs sm:text-lg font-bold text-gray-700 mt-0.5">
+                        {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "Just now"}
                       </p>
                     </div>
                   </div>

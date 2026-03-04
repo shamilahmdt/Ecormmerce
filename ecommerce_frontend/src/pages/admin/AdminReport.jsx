@@ -119,194 +119,224 @@ function AdminReport() {
 
   return (
     <>
-      <div className="admins-container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="search-bar-top" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div>
-            <input
-              type="date"
-              className="reporter-search-date"
-              style={{ padding: '0.8rem', borderRadius: '12px', border: '1px solid #eee', fontWeight: 'bold' }}
-              value={searchDate}
-              onChange={(e) => setSearchDate(e.target.value)}
-            />
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 font-sans px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Sticky Header with Filters */}
+        <div className="bg-white rounded-[2rem] p-4 sm:p-6 shadow-sm border border-gray-100 mb-8 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-shrink-0">
+              <input
+                type="date"
+                className="w-full sm:w-auto px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 font-bold text-xs outline-none focus:ring-2 focus:ring-black transition-all"
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
+              />
+            </div>
+
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Search name, product, Category..."
+                className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-100 bg-gray-50 font-bold text-xs outline-none focus:ring-2 focus:ring-black transition-all"
+                value={searchUser}
+                onChange={(e) => setSearchUser(e.target.value)}
+              />
+              <IoIosSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+
+            <select 
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 font-bold text-xs outline-none focus:ring-2 focus:ring-black transition-all appearance-none"
+            >
+              <option value="ALL">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Dispatched">Dispatched</option>
+              <option value="Out for Delivery">Out</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
           </div>
 
-          <div className="search-input-wraper" style={{ position: 'relative', flexGrow: 1 }}>
-            <input
-              type="text"
-              className="reporter-search-shop"
-              placeholder="Search Name, Product, Category..."
-              style={{ width: '100%', padding: '0.8rem 3rem 0.8rem 1rem', borderRadius: '12px', border: '1px solid #eee', fontWeight: 'bold' }}
-              value={searchUser}
-              onChange={(e) => setSearchUser(e.target.value)}
-            />
-            <span className="search-icon" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#ccc' }}>
-              <IoIosSearch size={20} />
-            </span>
-          </div>
-
-          <select 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{ padding: '0.8rem', borderRadius: '12px', border: '1px solid #eee', fontWeight: 'bold', background: '#fff' }}
-          >
-            <option value="ALL">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Processing">Processing</option>
-            <option value="Dispatched">Dispatched</option>
-            <option value="Out for Delivery">Out for Delivery</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-
-          <button 
-            className="search-apply-btn" 
-            onClick={handleApply}
-            style={{ background: '#000', color: '#fff', padding: '0.8rem 2rem', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '900', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.1em' }}
-          >
-            Apply
-          </button>
-
-          <div 
-            className="reset-applay-btn" 
-            onClick={handleRefresh}
-            style={{ padding: '0.8rem', cursor: 'pointer', color: '#999', background: '#f5f5f5', borderRadius: '12px' }}
-          >
-            <GrPowerReset size={20} />
-          </div>
-        </div>
-
-        <div style={{ background: '#000', color: '#fff', padding: '1.5rem 2rem', borderRadius: '24px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ fontSize: '10px', fontWeight: '900', color: '#666', textTransform: 'uppercase', marginBottom: '4px' }}>Page Sales</p>
-            <h2 style={{ fontSize: '24px', fontWeight: '900' }}>₹{totalAmount.toLocaleString("en-IN")}</h2>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '10px', fontWeight: '900', color: '#666', textTransform: 'uppercase', marginBottom: '4px' }}>Matching Records</p>
-            <h2 style={{ fontSize: '24px', fontWeight: '900' }}>{totalCount}</h2>
+          <div className="flex gap-2">
+            <button 
+              className="flex-grow bg-black text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] sm:text-xs shadow-lg active:scale-95 transition-all" 
+              onClick={handleApply}
+            >
+              Apply Filter
+            </button>
+            <button 
+              className="bg-gray-100 text-gray-400 px-4 py-3 rounded-xl hover:text-black hover:bg-gray-200 transition-all active:scale-95"
+              onClick={handleRefresh}
+            >
+              <GrPowerReset size={18} />
+            </button>
           </div>
         </div>
 
+        {/* Stats Section */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-gray-900 p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] text-white shadow-xl flex flex-col justify-center">
+            <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Session Volume</p>
+            <h2 className="text-xl sm:text-3xl font-black">₹{totalAmount.toLocaleString("en-IN")}</h2>
+          </div>
+          <div className="bg-white p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] border border-gray-100 shadow-sm flex flex-col justify-center text-right sm:text-left">
+            <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Records Found</p>
+            <h2 className="text-xl sm:text-3xl font-black text-gray-900">{totalCount}</h2>
+          </div>
+        </div>
+
+        {/* Records List/Table */}
         {loading && currentPageData.length === 0 ? (
-          <SyncLoaderComponent />
-        ) : (
-          <div className="report-table" style={{ background: '#fff', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-            <table className="reports-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Sl.No</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Receipt ID</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Product</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Date & Time</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Customer</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Status</th>
-                  <th style={{ padding: '1.2rem', textAlign: 'right', fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Amount</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {currentPageData.map((item, index) => (
-                  <tr key={item.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                    <td style={{ padding: '1.2rem', fontSize: '12px', fontWeight: 'bold', color: '#ccc' }}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td style={{ padding: '1.2rem', fontSize: '13px', fontWeight: '900' }}>#{item.orderId}</td>
-                    <td style={{ padding: '1.2rem' }}>
-                      <p style={{ fontSize: '13px', fontWeight: 'bold' }}>{item.items?.[0]?.name || item.productName}</p>
-                      <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#555FE6', textTransform: 'uppercase' }}>{item.items?.[0]?.category || item.productCategory || 'General'}</p>
-                    </td>
-                    <td style={{ padding: '1.2rem', fontSize: '11px', fontWeight: 'bold' }}>{formatDate(item.date || item.CREATED_AT)}</td>
-                    <td style={{ padding: '1.2rem' }}>
-                      <p style={{ fontSize: '12px', fontWeight: 'bold' }}>{item.userName}</p>
-                      <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#aaa' }}>{item.userPhone}</p>
-                    </td>
-                    <td style={{ padding: '1.2rem' }}>
-                      <span style={{ 
-                        padding: '4px 12px', 
-                        borderRadius: '100px', 
-                        fontSize: '9px', 
-                        fontWeight: '900', 
-                        textTransform: 'uppercase',
-                        background: item.status === 'Delivered' ? '#E8F5E9' : item.status === 'Cancelled' ? '#FFEBEE' : '#FFF9C4',
-                        color: item.status === 'Delivered' ? '#2E7D32' : item.status === 'Cancelled' ? '#C62828' : '#F9A825'
-                      }}>
-                        {item.status || "Pending"}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1.2rem', textAlign: 'right', fontSize: '14px', fontWeight: '900' }}>
-                      ₹{Number(item.total || 0).toLocaleString("en-IN")}
-                    </td>
-                  </tr>
-                ))}
-
-                {currentPageData.length === 0 && !loading && (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      style={{ textAlign: "center", padding: "4rem", fontWeight: 'bold', color: '#ccc' }}
-                    >
-                      No sales records found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="flex justify-center p-20">
+             <GridLoader color="#4F46E5" size={15} />
           </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/50 border-bottom border-gray-100">
+                    <th className="p-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">ID</th>
+                    <th className="p-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Item / Category</th>
+                    <th className="p-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Date & Time</th>
+                    <th className="p-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Customer</th>
+                    <th className="p-5 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                    <th className="p-5 text-right text-[9px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentPageData.map((item) => (
+                    <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors group">
+                      <td className="p-5 text-xs font-black text-gray-300">#{item.orderId.slice(-6)}</td>
+                      <td className="p-5">
+                        <p className="text-xs font-black text-gray-900 uppercase tracking-tight line-clamp-1">{item.items?.[0]?.name || item.productName}</p>
+                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mt-0.5">{item.items?.[0]?.category || item.productCategory || 'General'}</p>
+                      </td>
+                      <td className="p-5 text-[10px] font-bold text-gray-500">{formatDate(item.date || item.CREATED_AT)}</td>
+                      <td className="p-5">
+                        <p className="text-xs font-black text-gray-700 uppercase">{item.userName}</p>
+                        <p className="text-[9px] font-bold text-gray-400">{item.userPhone}</p>
+                      </td>
+                      <td className="p-5">
+                        <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                          item.status === 'Delivered' ? 'bg-green-50 text-green-600' : 
+                          item.status === 'Cancelled' ? 'bg-red-50 text-red-500' : 
+                          'bg-yellow-50 text-yellow-600'
+                        }`}>
+                          {item.status || "Pending"}
+                        </span>
+                      </td>
+                      <td className="p-5 text-right font-black text-sm text-gray-900 italic">
+                        ₹{Number(item.total || 0).toLocaleString("en-IN")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {currentPageData.map((item) => (
+                <div key={item.id} className="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Receipt ID</p>
+                      <h3 className="font-black text-xs text-gray-900">#{item.orderId}</h3>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                      item.status === 'Delivered' ? 'bg-green-50 text-green-600' : 
+                      item.status === 'Cancelled' ? 'bg-red-50 text-red-500' : 
+                      'bg-yellow-50 text-yellow-600'
+                    }`}>
+                      {item.status || "Pending"}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-xl mb-4">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Item Detail</p>
+                    <p className="font-black text-xs text-gray-800 line-clamp-1 truncate uppercase">{item.items?.[0]?.name || item.productName}</p>
+                    <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mt-0.5">{item.items?.[0]?.category || item.productCategory || 'General'}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</p>
+                      <p className="text-[10px] font-black text-gray-700 truncate">{item.userName}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Amount</p>
+                      <p className="text-sm font-black text-gray-900">₹{Number(item.total || 0).toLocaleString("en-IN")}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+                    <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest italic">{formatDate(item.date || item.CREATED_AT)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {currentPageData.length === 0 && !loading && (
+              <div className="bg-white rounded-[2rem] p-20 text-center border-2 border-dashed border-gray-100 text-gray-300 font-bold uppercase tracking-widest text-xs">
+                 No report data available
+              </div>
+            )}
+          </>
         )}
 
-        <div className="bottom-container-admins" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' }}>
-          <p className="total-admims" style={{ fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Page {currentPage} of {totalPages}</p>
+        {/* Pagination Controls */}
+        <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-6">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+            Page {currentPage} of {totalPages} <span className="mx-2">•</span> {totalCount} Records
+          </p>
 
-          <div className="pagination" style={{ display: 'flex', gap: '8px' }}>
+          <div className="flex items-center gap-2">
             <button
-              className="pagination-btn"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1 || loading}
-              style={{ background: '#fff', border: '1px solid #eee', padding: '10px', borderRadius: '12px', cursor: (currentPage === 1 || loading) ? 'not-allowed' : 'pointer', color: (currentPage === 1 || loading) ? '#eee' : '#000' }}
+              className="p-3 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-black hover:border-black disabled:opacity-20 transition-all shadow-sm"
             >
-              <FaArrowLeft />
+              <FaArrowLeft size={14} />
             </button>
 
-            {[...Array(totalPages)].map((_, i) => {
-              const pageNum = i + 1;
-              if (totalPages > 5 && (pageNum > 3 && pageNum < totalPages - 2 && Math.abs(pageNum - currentPage) > 1)) {
-                 if (pageNum === 4 || pageNum === totalPages - 3) return <span key={pageNum} style={{ alignSelf: 'center', color: '#ddd' }}>...</span>;
-                 return null;
-              }
-              return (
-                <button
-                  key={pageNum}
-                  className={currentPage === pageNum ? "active-page" : "inactive-page"}
-                  onClick={() => handlePageChange(pageNum)}
-                  disabled={loading}
-                  style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    borderRadius: '12px', 
-                    border: 'none', 
-                    fontWeight: '900',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    background: currentPage === pageNum ? '#000' : '#fff',
-                    color: currentPage === pageNum ? '#fff' : '#aaa',
-                    boxShadow: currentPage === pageNum ? '0 10px 20px rgba(0,0,0,0.1)' : 'none'
-                  }}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+            <div className="flex gap-2">
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+                if (totalPages > 5 && (pageNum > 3 && pageNum < totalPages - 2 && Math.abs(pageNum - currentPage) > 1)) {
+                   if (pageNum === 4 || pageNum === totalPages - 3) return <span key={pageNum} className="text-gray-300">...</span>;
+                   return null;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${
+                      currentPage === pageNum 
+                        ? "bg-black text-white shadow-xl shadow-gray-200" 
+                        : "bg-white text-gray-400 border border-gray-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
 
             <button
-              className="pagination-btn"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages || loading}
-              style={{ background: '#fff', border: '1px solid #eee', padding: '10px', borderRadius: '12px', cursor: (currentPage === totalPages || loading) ? 'not-allowed' : 'pointer', color: (currentPage === totalPages || loading) ? '#eee' : '#000' }}
+              className="p-3 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-black hover:border-black disabled:opacity-20 transition-all shadow-sm"
             >
-              <FaArrowRight />
+              <FaArrowRight size={14} />
             </button>
           </div>
-
-          <p className="total-admims" style={{ fontSize: '10px', fontWeight: '900', color: '#aaa', textTransform: 'uppercase' }}>Total Records: {totalCount}</p>
         </div>
       </div>
+    </div>
     </>
   );
 }

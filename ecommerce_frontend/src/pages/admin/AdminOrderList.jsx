@@ -8,12 +8,22 @@ import { GrPowerReset } from "react-icons/gr";
 
 const formatDate = (dateInput) => {
   if (!dateInput) return "-";
-  let date;
-  if (dateInput.seconds) date = new Date(dateInput.seconds * 1000);
-  else if (dateInput._seconds) date = new Date(dateInput._seconds * 1000);
-  else date = new Date(dateInput);
+  try {
+    let date;
+    if (dateInput.seconds) date = new Date(dateInput.seconds * 1000);
+    else if (dateInput._seconds) date = new Date(dateInput._seconds * 1000);
+    else date = new Date(dateInput);
 
-  return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+    if (isNaN(date.getTime())) return "-";
+    
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch (e) {
+    return "-";
+  }
 };
 
 const AdminOrderList = () => {
@@ -131,7 +141,7 @@ const AdminOrderList = () => {
         "User Name": order.userName || "-",
         Phone: order.userPhone || "-",
         "Order ID": order.displayOrderId || order.orderId,
-        Date: order.date ? new Date(order.date).toLocaleString() : "-",
+        Date: formatDate(order.date || order.createdAt || order.CREATED_AT),
         "Product": item.name || "-",
         Total: (order.total || 0).toFixed(2),
         Status: order.status || "Pending",
@@ -151,201 +161,228 @@ const AdminOrderList = () => {
   const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
 
   return (
-    <>
+    <div className="p-3 sm:p-10 max-w-7xl mx-auto min-h-screen bg-transparent">
       {loading && orders.length === 0 ? (
         <div className="flex items-center justify-center min-h-screen">
           <GridLoader color="#000" size={25} />
         </div>
       ) : (
-        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-gray-900 uppercase">Item Management</h1>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">One entry per physical item (Total: {totalCount})</p>
+        <>
+          {/* HEADER SECTION */}
+          <div className="mb-6 sm:mb-10">
+            <div className="flex items-center gap-2 text-[8px] sm:text-[10px] font-black text-gray-400 mb-1 sm:mb-2 uppercase tracking-[0.3em]">
+               <span>Admin</span>
+               <span>/</span>
+               <span className="text-black">Order Control</span>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-              {/* Date Filter */}
-              <input
-                type="date"
-                value={filterDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-black"
-              />
-
-              {/* Status Filter */}
-              <select 
-                value={filterStatus}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="ALL">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Dispatched">Dispatched</option>
-                <option value="Out for Delivery">Out for Delivery</option>
-                <option value="Delivered">Delivered</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-
-              {/* Search Field */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Search Category, Product, ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-black flex-grow sm:w-64"
-                />
-                <button 
-                  onClick={handleSearch}
-                  className="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase"
-                >
-                  Apply
-                </button>
-
-                <div 
-                  onClick={handleReset}
-                  className="bg-gray-50 border border-gray-100 p-2 rounded-xl cursor-pointer text-gray-400 hover:text-black hover:border-black transition-all flex items-center justify-center"
-                >
-                  <GrPowerReset size={16} />
-                </div>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+              <div>
+                <h1 className="text-2xl sm:text-5xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+                  Admin <span className="text-indigo-600">Control</span>
+                </h1>
+                <p className="text-[9px] sm:text-xs font-bold text-gray-400 mt-2 uppercase tracking-widest">Total Management ({totalCount} items)</p>
               </div>
-
               <button
                 onClick={exportToExcel}
-                className="bg-indigo-50 text-indigo-600 border border-indigo-100 px-6 py-2 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-100 transition-all flex-shrink-0"
+                className="bg-black text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] sm:text-[10px] hover:bg-indigo-600 transition-all shadow-xl shadow-black/10 active:scale-95 flex items-center gap-2 justify-center"
               >
-                Export Page
+                Export Excel
               </button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          {/* TOOLBAR SECTION */}
+          <div className="bg-white border border-gray-100 p-3 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-sm mb-6 sm:mb-8">
+            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search receipt, name, category..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="w-full pl-10 pr-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-bold outline-none focus:ring-2 focus:ring-black"
+                  />
+                </div>
+
+                <select 
+                  value={filterStatus}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className="w-full px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-bold outline-none focus:ring-2 focus:ring-black appearance-none"
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Dispatched">Dispatched</option>
+                  <option value="Out for Delivery">Out for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="w-full px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-bold outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleSearch}
+                  className="flex-1 lg:flex-none bg-indigo-600 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest hover:bg-indigo-700 active:scale-95"
+                >
+                  Apply
+                </button>
+                <div 
+                  onClick={handleReset}
+                  className="bg-gray-50 border border-gray-100 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl cursor-pointer text-gray-400 hover:text-black hover:bg-gray-100 transition-all flex items-center justify-center shrink-0"
+                >
+                  <GrPowerReset size={16} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* LIST SECTION */}
+          <div className="space-y-3 sm:space-y-4">
             {orders.map((order) => {
               const item = order.items?.[0] || {}; 
               return (
                 <div
                   key={order.id}
-                  className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 hover:shadow-md transition-all group"
+                  className="bg-white border border-gray-50 rounded-2xl sm:rounded-[2rem] p-3 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 hover:shadow-xl hover:shadow-indigo-100/20 transition-all duration-500 group relative"
                 >
-                  {/* Product Image */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl p-2 flex-shrink-0 border border-gray-100">
-                    <img src={item.imageUrl} alt="" className="w-full h-full object-contain" />
+                  <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 rounded-r-full ${
+                    order.status === "Cancelled" ? "bg-red-500" :
+                    order.status === "Delivered" ? "bg-green-500" :
+                    order.status === "Dispatched" ? "bg-blue-500" :
+                    "bg-yellow-500"
+                  }`} />
+
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 rounded-xl sm:rounded-2xl p-2 flex-shrink-0 border border-gray-50 relative group-hover:scale-105 transition-transform">
+                    <img src={item.imageUrl} alt="" className="w-full h-full object-contain mix-blend-multiply" />
                   </div>
 
-                  {/* Info Blocks */}
-                  <div className="flex-grow grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                    <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Receipt / Date</p>
-                      <p className="font-black text-xs text-gray-900">#{order.displayOrderId}</p>
-                      <p className="text-[9px] font-bold text-gray-400 mt-0.5">{formatDate(order.date || order.CREATED_AT)}</p>
+                  <div className="flex-grow grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full text-left">
+                    <div className="flex flex-col justify-center">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-none">Receipt ID</p>
+                      <p className="font-black text-[10px] sm:text-xs text-gray-900 leading-none mb-1">#{order.displayOrderId}</p>
+                      <p className="text-[8px] sm:text-[10px] font-bold text-gray-400">{formatDate(order.date || order.createdAt || order.CREATED_AT)}</p>
                     </div>
 
-                    <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Item Detail</p>
-                      <p className="font-bold text-xs text-gray-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{item.name}</p>
-                      <p className="text-[9px] font-bold text-indigo-500 uppercase mt-0.5">₹{(order.total || 0).toLocaleString()}</p>
+                    <div className="flex flex-col justify-center">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-none">Product</p>
+                      <p className="font-bold text-[10px] sm:text-xs text-gray-900 truncate uppercase tracking-tight group-hover:text-indigo-600">{item.name}</p>
+                      <p className="text-[8px] sm:text-[10px] font-black text-indigo-500 uppercase mt-0.5 tracking-wider">₹{(order.total || 0).toLocaleString()}</p>
                     </div>
 
-                    <div className="hidden lg:block">
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</p>
-                      <p className="font-bold text-xs text-gray-800 truncate">{order.userName}</p>
-                      <p className="text-[9px] font-bold text-gray-400 mt-0.5">{order.userPhone}</p>
+                    <div className="hidden sm:flex flex-col justify-center">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-none">Customer</p>
+                      <p className="font-bold text-[10px] sm:text-xs text-gray-900 truncate uppercase">{order.userName}</p>
+                      <p className="text-[8px] sm:text-[10px] font-bold text-gray-400">{order.userPhone}</p>
                     </div>
 
-                    <div>
-                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                          order.status === "Cancelled" ? "bg-red-50 text-red-500" :
-                          order.status === "Delivered" ? "bg-green-50 text-green-600" :
-                          order.status === "Dispatched" ? "bg-blue-50 text-blue-600" :
-                          "bg-yellow-50 text-yellow-600"
+                    <div className="flex flex-col justify-center">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-none">Status</p>
+                      <p className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.1em] ${
+                        order.status === "Cancelled" ? "text-red-500" :
+                        order.status === "Delivered" ? "text-green-600" :
+                        order.status === "Dispatched" ? "text-blue-600" :
+                        "text-yellow-600"
+                      }`}>
+                        {order.status || "Pending"}
+                      </p>
+                    </div>
+
+                    <div className="col-span-2 md:col-span-1 flex items-center justify-start sm:justify-end gap-2 mt-1 sm:mt-0">
+                       <button
+                        onClick={() => openModal(order)}
+                        disabled={order.status === "Delivered" || order.status === "Cancelled"}
+                        className={`px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl font-black uppercase tracking-widest text-[8px] sm:text-[10px] transition-all ${
+                          order.status === "Delivered" || order.status === "Cancelled"
+                            ? "bg-gray-50 text-gray-300 cursor-not-allowed"
+                            : "bg-black text-white hover:bg-indigo-600 shadow-lg active:scale-95"
                         }`}
                       >
-                        {order.status || "Pending"}
-                      </span>
+                        Update
+                      </button>
+                      <div className="sm:hidden text-[8px] font-bold text-gray-400 italic">
+                        Node: {order.userName?.split(' ')[0]}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Action */}
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <button
-                      onClick={() => openModal(order)}
-                      disabled={order.status === "Delivered" || order.status === "Cancelled"}
-                      className={`flex-1 sm:flex-none px-5 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all ${
-                        order.status === "Delivered" || order.status === "Cancelled"
-                          ? "bg-gray-50 text-gray-300 cursor-not-allowed border border-gray-100"
-                          : "bg-gray-900 text-white hover:bg-black active:scale-95 shadow-sm"
-                      }`}
-                    >
-                      Update
-                    </button>
                   </div>
                 </div>
               );
             })}
+          </div>
+            
             {orders.length === 0 && !loading && (
-              <div className="py-20 text-center">
+              <div className="py-24 text-center bg-white rounded-[3rem] border border-dashed border-gray-200">
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No items found matching your criteria</p>
               </div>
             )}
-          </div>
 
-          {/* Pagination */}
+          {/* PAGINATION SECTION */}
           {totalPages > 1 && (
-            <div className="mt-10 flex justify-center items-center gap-2">
+            <div className="mt-12 flex justify-center items-center gap-2">
               <button
                 disabled={currentPage === 1 || loading}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-4 py-2 rounded-xl border border-gray-100 disabled:opacity-30 hover:bg-gray-50 transition-all font-black text-[10px] uppercase"
+                className="px-6 py-3 rounded-2xl border border-gray-100 bg-white text-gray-400 disabled:opacity-30 hover:text-black transition-all font-black text-[10px] uppercase tracking-widest"
               >
-                Prev
+                Previous
               </button>
               
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-                // Simple logic to show only near pages if too many
-                if (totalPages > 7 && Math.abs(pageNum - currentPage) > 2 && pageNum !== 1 && pageNum !== totalPages) {
-                  if (Math.abs(pageNum - currentPage) === 3) return <span key={pageNum} className="text-gray-300">...</span>
-                  return null;
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${
-                      currentPage === pageNum ? "bg-black text-white shadow-lg shadow-gray-200" : "border border-gray-50 hover:bg-gray-50 text-gray-400"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
+              <div className="flex items-center gap-1.5 mx-2">
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (totalPages > 7 && Math.abs(pageNum - currentPage) > 2 && pageNum !== 1 && pageNum !== totalPages) {
+                    if (Math.abs(pageNum - currentPage) === 3) return <span key={pageNum} className="text-gray-200 font-bold">...</span>
+                    return null;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`w-11 h-11 rounded-2xl font-black text-[11px] transition-all ${
+                        currentPage === pageNum 
+                          ? "bg-black text-white shadow-xl shadow-gray-200" 
+                          : "bg-white border border-gray-50 text-gray-400 hover:text-black"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                })}
+              </div>
 
               <button
                 disabled={currentPage === totalPages || loading}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-4 py-2 rounded-xl border border-gray-100 disabled:opacity-30 hover:bg-gray-50 transition-all font-black text-[10px] uppercase"
+                className="px-6 py-3 rounded-2xl border border-gray-100 bg-white text-gray-400 disabled:opacity-30 hover:text-black transition-all font-black text-[10px] uppercase tracking-widest"
               >
                 Next
               </button>
             </div>
           )}
 
-
-          {/* Modal */}
+          {/* MODAL SYSTEM */}
           {modalOpen && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-              <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md border-t-8 border-indigo-600">
-                <h2 className="text-3xl font-black mb-2 tracking-tighter">Update Status</h2>
-                <p className="text-gray-400 font-bold mb-8">Manage this specific item receipt</p>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+              <div className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-2xl w-full max-w-md border border-gray-100">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase mb-1">Update Status</h2>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Manage this specific item receipt</p>
+                </div>
 
                 <div className="space-y-6">
                   <div>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Choose New State</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block px-1">Choose New State</label>
                     <Select
                       value={{ value: newStatus, label: newStatus }}
                       onChange={(selected) => setNewStatus(selected.value)}
@@ -360,22 +397,24 @@ const AdminOrderList = () => {
                       styles={{
                         control: (base) => ({
                           ...base,
-                          borderRadius: '16px',
+                          borderRadius: '20px',
                           borderColor: '#f3f4f6',
-                          padding: '8px',
+                          backgroundColor: '#f9fafb',
+                          padding: '8px 12px',
                           boxShadow: 'none',
-                          fontWeight: 'bold',
+                          fontWeight: '800',
+                          fontSize: '12px',
+                          textTransform: 'uppercase',
                         })
                       }}
                     />
                   </div>
 
                   {newStatus === "Cancelled" && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Cancellation Reason</label>
-                      <input
-                        type="text"
-                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-red-500 transition-all"
+                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 block px-1">Cancellation Reason</label>
+                      <textarea
+                        className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 font-bold text-xs outline-none focus:ring-2 focus:ring-red-500 transition-all min-h-[100px] resize-none"
                         placeholder="Reason for stock out / user req..."
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
@@ -383,16 +422,16 @@ const AdminOrderList = () => {
                     </div>
                   )}
 
-                  <div className="flex flex-col gap-3 pt-4">
+                  <div className="flex flex-col gap-3 pt-6">
                     <button
                       onClick={handleUpdateStatus}
-                      className="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95"
+                      className="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95"
                     >
                       Confirm Changes
                     </button>
                     <button
                       onClick={() => setModalOpen(false)}
-                      className="w-full bg-gray-50 text-gray-400 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-100 transition-all"
+                      className="w-full bg-white text-gray-400 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:text-black transition-all"
                     >
                       Go Back
                     </button>
@@ -401,9 +440,9 @@ const AdminOrderList = () => {
               </div>
             </div>
           )}
-        </div>
+        </>
       )}
-    </>
+    </div>
   );
 };
 

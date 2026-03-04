@@ -55,9 +55,9 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Right: Profile Icon */}
-        {user && (
-          <div className="flex items-center space-x-6">
+        {/* Right: Profile Icon or Login Button */}
+        <div className="flex items-center space-x-6">
+          {user ? (
             <Link
               to="/profile"
               className="group relative flex items-center justify-center"
@@ -89,8 +89,15 @@ const Navbar = () => {
                 VIEW PROFILE
               </span>
             </Link>
-          </div>
-        )}
+          ) : (
+            <Link
+              to="/auth"
+              className="bg-white text-black px-4 py-1.5 rounded-lg text-xs font-black tracking-widest hover:bg-gray-200 transition-all uppercase"
+            >
+              Login
+            </Link>
+          )}
+        </div>
       </nav>
 
       <Sidebar 

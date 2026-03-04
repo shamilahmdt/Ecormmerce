@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE_URL = `http://${window.location.hostname}:5000/api`;
+
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
 });
 
 API.interceptors.request.use((req) => {
@@ -26,7 +28,7 @@ API.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to get a new access token
-          const res = await axios.post("http://localhost:5000/api/token/refresh", {
+          const res = await axios.post(`${API_BASE_URL}/token/refresh`, {
             refreshToken,
           });
 

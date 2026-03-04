@@ -128,10 +128,10 @@ const OrderList = () => {
           </Link>
         </div>
       ) : (
-        <div className="p-6 max-w-3xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div className="p-3 sm:p-6 max-w-3xl mx-auto space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 px-1">
             <div>
-              <h1 className="text-3xl font-black tracking-tighter uppercase">My Order Receipts</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase">My Orders</h1>
               <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Total Receipts: {totalCount}</p>
             </div>
             
@@ -140,12 +140,12 @@ const OrderList = () => {
                 type="date"
                 value={filterDate}
                 onChange={(e) => handleDateChange(e.target.value)}
-                className="flex-grow sm:flex-none px-4 py-2 rounded-xl bg-white border border-gray-100 text-xs font-black outline-none focus:ring-2 focus:ring-black shadow-sm"
+                className="flex-grow sm:flex-none px-3 sm:px-4 py-2 rounded-xl bg-white border border-gray-100 text-[10px] sm:text-xs font-black outline-none focus:ring-2 focus:ring-black shadow-sm"
               />
               {filterDate && (
                 <button 
                   onClick={clearFilters}
-                  className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:border-black transition-all"
+                  className="px-3 sm:px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:border-black transition-all"
                 >
                   Clear
                 </button>
@@ -154,22 +154,22 @@ const OrderList = () => {
           </div>
 
           {orders.map((order) => {
-            const item = order.items[0]; // Each order is now 1 item
+            const item = order.items[0]; 
             return (
               <div
                 key={order.id}
-                className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:shadow-2xl"
+                className="bg-white rounded-2xl sm:rounded-[32px] border border-gray-100 shadow-lg sm:shadow-xl overflow-hidden group transition-all hover:shadow-2xl"
               >
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Header: ID & Status */}
-                  <div className="flex justify-between items-start mb-6">
+                  <div className="flex justify-between items-start mb-4 sm:mb-6">
                     <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Receipt ID</p>
-                      <p className="font-black text-lg">#{order.displayOrderId || order.orderId}</p>
-                      <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase">{formatDate(order.date || order.CREATED_AT)}</p>
+                      <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">Receipt ID</p>
+                      <p className="font-black text-sm sm:text-lg">#{order.displayOrderId || order.orderId}</p>
+                      <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 mt-0.5 sm:mt-1 uppercase">{formatDate(order.date || order.CREATED_AT)}</p>
                     </div>
                     <span
-                      className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 ${
                         order.status === "Cancelled" ? "bg-red-100 text-red-500" :
                         order.status === "ReturnRequested" ? "bg-orange-100 text-orange-500" :
                         order.status === "Delivered" ? "bg-green-100 text-green-600" :
@@ -182,29 +182,29 @@ const OrderList = () => {
                   </div>
 
                   {/* Product Info */}
-                  <div className="flex gap-6 items-center bg-gray-50 p-4 rounded-2xl mb-6">
-                    <div className="w-20 h-20 bg-white rounded-xl border p-2 flex items-center justify-center">
+                  <div className="flex gap-3 sm:gap-6 items-center bg-gray-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl mb-4 sm:mb-6">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-lg sm:rounded-xl border p-1 sm:p-2 flex items-center justify-center shrink-0">
                       <img src={item.imageUrl} alt={item.name} className="max-h-full max-w-full object-contain" />
                     </div>
-                    <div className="flex-grow">
-                      <h3 className="font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{item.name}</h3>
-                      <p className="text-sm font-bold text-gray-500">Quantity: {item.quantity}</p>
-                      <p className="text-lg font-black text-gray-900">₹{order.total.toLocaleString()}</p>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-black text-gray-900 text-xs sm:text-base group-hover:text-indigo-600 transition-colors uppercase tracking-tight truncate">{item.name}</h3>
+                      <p className="text-[10px] sm:text-sm font-bold text-gray-500">Qty: {item.quantity}</p>
+                      <p className="text-sm sm:text-lg font-black text-gray-900 mt-0.5">₹{order.total.toLocaleString()}</p>
                     </div>
                   </div>
 
                   {/* Payment Info */}
-                  <div className="grid grid-cols-3 gap-2 mb-6 text-[9px] font-black uppercase tracking-tight">
-                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                      <p className="text-gray-400 mb-1">Method</p>
-                      <p className="text-gray-900 line-clamp-1 truncate">{order.paymentMethod}</p>
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-4 sm:mb-6 text-[8px] sm:text-[9px] font-black uppercase tracking-tight">
+                    <div className="bg-gray-50 p-2 sm:p-3 rounded-lg sm:rounded-xl border border-gray-100">
+                      <p className="text-gray-400 mb-0.5 sm:mb-1">Method</p>
+                      <p className="text-gray-900 truncate">{order.paymentMethod}</p>
                     </div>
-                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                      <p className="text-indigo-400 mb-1">Wallet</p>
+                    <div className="bg-indigo-50 p-2 sm:p-3 rounded-lg sm:rounded-xl border border-indigo-100">
+                      <p className="text-indigo-400 mb-0.5 sm:mb-1">Wallet</p>
                       <p className="text-indigo-600">₹{order.walletAmountUsed || 0}</p>
                     </div>
-                    <div className="bg-green-50 p-3 rounded-xl border border-green-100">
-                      <p className="text-green-600 mb-1">Cashback</p>
+                    <div className="bg-green-50 p-2 sm:p-3 rounded-lg sm:rounded-xl border border-green-100">
+                      <p className="text-green-600 mb-0.5 sm:mb-1">Cashback</p>
                       <p className="text-green-700">₹{order.cashbackEarned}</p>
                     </div>
                   </div>
@@ -220,7 +220,7 @@ const OrderList = () => {
                             type: "cancel",
                           })
                         }
-                        className="flex-1 bg-red-600 text-white py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-red-700 transition-all shadow-lg shadow-red-100"
+                        className="flex-1 bg-red-600 text-white py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs hover:bg-red-700 transition-all shadow-md active:scale-95"
                       >
                         Cancel Item
                       </button>
@@ -234,7 +234,7 @@ const OrderList = () => {
                             type: "return",
                           })
                         }
-                        className="flex-1 bg-indigo-600 text-white py-3 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                        className="flex-1 bg-indigo-600 text-white py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs hover:bg-indigo-700 transition-all shadow-md active:scale-95"
                       >
                         Request Return
                       </button>
@@ -243,12 +243,12 @@ const OrderList = () => {
 
                   {/* Reasons */}
                   {order.cancelReason && (
-                    <div className="mt-4 p-4 bg-red-50 rounded-2xl border border-red-100 italic text-xs text-red-600 font-bold">
+                    <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-red-50 rounded-xl sm:rounded-2xl border border-red-100 italic text-[10px] sm:text-xs text-red-600 font-bold">
                        Cancellation Reason: {order.cancelReason}
                     </div>
                   )}
                   {order.returnReason && (
-                    <div className="mt-4 p-4 bg-orange-50 rounded-2xl border border-orange-100 italic text-xs text-orange-600 font-bold">
+                    <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-orange-50 rounded-xl sm:rounded-2xl border border-orange-100 italic text-[10px] sm:text-xs text-orange-600 font-bold">
                        Return Reason: {order.returnReason}
                     </div>
                   )}

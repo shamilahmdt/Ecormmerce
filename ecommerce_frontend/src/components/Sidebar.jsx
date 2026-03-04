@@ -86,35 +86,45 @@ const Sidebar = ({ isOpen, onClose, user, cartCount, wishlistCount }) => {
           <div className="pt-6 border-t border-gray-100 mt-auto">
             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-4">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logged in as</p>
-              <p className="font-bold text-gray-800 line-clamp-1">{user?.fullName || "Guest"}</p>
+              <p className="font-bold text-gray-800 line-clamp-1">{user?.fullName || "Guest User"}</p>
             </div>
             
-            {!showLogoutConfirm ? (
-              <button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-all border border-transparent hover:border-red-100 group"
-              >
-                <FaSignOutAlt className="text-xl group-hover:translate-x-1 transition-transform" />
-                <span className="text-sm uppercase tracking-widest font-black">Logout</span>
-              </button>
-            ) : (
-              <div className="bg-red-50 p-4 rounded-2xl border border-red-100 animate-in slide-in-from-bottom-2 duration-300">
-                <p className="text-xs font-black text-red-600 uppercase tracking-widest text-center mb-3">Are you sure?</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleLogout}
-                    className="flex-1 bg-red-600 text-white py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
-                  >
-                    Logout
-                  </button>
-                  <button
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 bg-white text-gray-500 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
+            {user ? (
+              !showLogoutConfirm ? (
+                <button
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-500 font-bold hover:bg-red-50 transition-all border border-transparent hover:border-red-100 group"
+                >
+                  <FaSignOutAlt className="text-xl group-hover:translate-x-1 transition-transform" />
+                  <span className="text-sm uppercase tracking-widest font-black">Logout</span>
+                </button>
+              ) : (
+                <div className="bg-red-50 p-4 rounded-2xl border border-red-100 animate-in slide-in-from-bottom-2 duration-300">
+                  <p className="text-xs font-black text-red-600 uppercase tracking-widest text-center mb-3">Are you sure?</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleLogout}
+                      className="flex-1 bg-red-600 text-white py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+                    >
+                      Logout
+                    </button>
+                    <button
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="flex-1 bg-white text-gray-500 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-gray-200 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )
+            ) : (
+              <Link
+                to="/auth"
+                onClick={onClose}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-black text-white font-bold hover:bg-gray-800 transition-all border border-transparent group justify-center"
+              >
+                <span className="text-sm uppercase tracking-widest font-black">Login / Join Now</span>
+              </Link>
             )}
           </div>
         </div>
