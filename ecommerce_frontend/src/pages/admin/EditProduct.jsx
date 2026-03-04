@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import API from "../api";
-// import { firestore } from "../firebaseConfig";
+import API from "../../api";
+// import { firestore } from "../../firebaseConfig";
 // import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 const EditProduct = () => {

@@ -1,22 +1,23 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import AuthenticationForm from "./pages/auth/AuthenticationForm";
-import Dashboard from "./pages/Dashboard";
-import AddProduct from "./pages/AddProduct";
-import EditProduct from "./pages/EditProduct";
-import AdminOrderList from "./pages/AdminOrderList";
-import AdminCoupons from "./pages/AdminCoupons";
+import Dashboard from "./pages/admin/Dashboard";
+import AddProduct from "./pages/admin/AddProduct";
+import EditProduct from "./pages/admin/EditProduct";
+import AdminOrderList from "./pages/admin/AdminOrderList";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminReport from "./pages/admin/AdminReport";
 import ProtectedRoute from "./Routes/ProtectedRoute";
-import ProductList from "./pages/ProductList";
-import Cart from "./pages/Cart";
-import CheckOut from "./pages/CheckOut";
-import OrderPlaced from "./pages/OrderPlaced";
-import OrderList from "./pages/OrderList ";
-import Wishlist from "./pages/Wishlist";
-import Wallet from "./pages/Wallet";
+import ProductList from "./pages/user/ProductList";
+import Cart from "./pages/user/Cart";
+import CheckOut from "./pages/user/CheckOut";
+import OrderPlaced from "./pages/user/OrderPlaced";
+import OrderList from "./pages/user/OrderList";
+import Wishlist from "./pages/user/Wishlist";
+import Wallet from "./pages/user/Wallet";
 import NotAuthorized from "./pages/auth/NotAuthorized";
 import Navbar from "./components/Navbar";
-import Profile from "./pages/Profile";
+import Profile from "./pages/user/Profile";
 
 function App() {
   return (
@@ -41,9 +42,9 @@ function App() {
         path="/edit-product/:id"
         element={<ProtectedRoute role="admin"><EditProduct /></ProtectedRoute>}
       />
-      <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>}
-      />
+       <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>} />
        <Route path="/coupons" element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
+       <Route path="/report" element={<ProtectedRoute role="admin"><AdminReport /></ProtectedRoute>} />
         {/* User Routes */}
         <Route path="/" element={<ProtectedRoute role="user"><ProductList /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute role="user"><Cart /></ProtectedRoute>} />

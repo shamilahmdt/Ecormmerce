@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { GridLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useWishlist } from "../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import toast from "react-hot-toast";
-import axios from "axios";
+import API from "../../api";
 
 const FILTER_TAGS = ["ALL", "NEW", "BEST SELLERS"];
 
@@ -25,7 +25,7 @@ const ProductList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await API.get("/products");
         setProducts(res.data);
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -60,9 +60,10 @@ const ProductList = () => {
         ? true
         : product.category?.toLowerCase() === activeTag.toLowerCase();
 
-    const matchesSearch = product.name
-      ?.toLowerCase()
-      .includes(search.toLowerCase());
+    const searchLower = search.toLowerCase();
+    const matchesSearch =
+      product.name?.toLowerCase().includes(searchLower) ||
+      product.category?.toLowerCase().includes(searchLower);
 
     return matchesTag && matchesSearch;
   });

@@ -1,0 +1,29 @@
+/* AdminReport.css */
+.active-page {
+  background: #000 !important;
+  color: #fff !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.inactive-page {
+  background: #fff !important;
+  color: #aaa !important;
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed !important;
+  color: #eee !important;
+}
+
+.reports-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.search-apply-btn:hover {
+  opacity: 0.9;
+}
+
+.reset-applay-btn:hover {
+  background-color: #eee !important;
+  color: #666 !important;
+}

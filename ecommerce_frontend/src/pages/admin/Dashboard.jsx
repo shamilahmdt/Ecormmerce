@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api";
+import API from "../../api";
 import { FaSearch } from "react-icons/fa";
 import { GridLoader } from "react-spinners";
-// import { firestore } from "../firebaseConfig";
+// import { firestore } from "../../firebaseConfig";
 // import { collection, addDoc } from "firebase/firestore";
 
 const FILTER_TAGS = [

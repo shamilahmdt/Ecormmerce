@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import axios from "axios";
+import API from "../../api";
 
 export default function AuthenticationForm() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function AuthenticationForm() {
 
         const role = mode === "signup-admin" ? "admin" : "user";
 
-        await axios.post("http://localhost:5000/api/register", {
+        await API.post("/register", {
           fullName,
           phone,
           password,
@@ -47,15 +47,16 @@ export default function AuthenticationForm() {
       }
 
       // ================= LOGIN =================
-      const res = await axios.post("http://localhost:5000/api/login", {
+      const res = await API.post("/login", {
         phone,
         password,
       });
 
-      const { token, user } = res.data;
+      const { token, refreshToken, user } = res.data;
 
-      // Store JWT token
+      // Store Tokens
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("loggedInUser", JSON.stringify(user));
 
       toast.success("Login successful!");

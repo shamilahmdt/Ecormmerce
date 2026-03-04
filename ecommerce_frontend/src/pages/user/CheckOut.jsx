@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useWallet } from "../context/WalletContext";
+import { useCart } from "../../context/CartContext";
+import { useWallet } from "../../context/WalletContext";
 import toast from "react-hot-toast";
-import API from "../api";
+import API from "../../api";
 import { FaTicketAlt, FaWallet, FaCheckCircle, FaTrashAlt, FaTag, FaShoppingCart } from "react-icons/fa";
 
 const Checkout = () => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import API from "../api";
+import API from "../../api";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { FaUserCircle, FaWallet, FaPhone, FaCalendarAlt, FaEdit, FaTimes, FaSignOutAlt, FaLock, FaMapMarkerAlt, FaCamera } from 'react-icons/fa';
@@ -7,6 +7,7 @@ import { FaUserCircle, FaWallet, FaPhone, FaCalendarAlt, FaEdit, FaTimes, FaSign
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     newPassword: "",
@@ -25,6 +26,17 @@ const Profile = () => {
     try {
       const { data } = await API.get("/profile");
       setUser(data);
+      
+      // Update local storage to keep navbar in sync with server data
+      const storedUser = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+      const updatedUser = {
+        ...storedUser,
+        fullName: data.fullName,
+        profileImage: data.profileImage || ""
+      };
+      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("userUpdate"));
+
       setFormData({
         ...formData,
         fullName: data.fullName,
@@ -102,10 +114,16 @@ const Profile = () => {
       setEditing(false);
       
       // Update local storage too for immediate navbar update
-      const loggedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-      loggedUser.fullName = formData.fullName;
-      loggedUser.profileImage = formData.profileImage;
-      localStorage.setItem("loggedInUser", JSON.stringify(loggedUser));
+      const storedUser = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+      const updatedUser = {
+        ...storedUser,
+        fullName: formData.fullName,
+        profileImage: formData.profileImage
+      };
+      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+      
+      // Notify other components (like Navbar) that user data has changed
+      window.dispatchEvent(new Event("userUpdate"));
       
       setFormData({ ...formData, newPassword: "", confirmPassword: "" });
       fetchProfile();
@@ -115,9 +133,15 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await API.post("/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     localStorage.removeItem("loggedInUser");
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     window.location.href = "/auth";
   };
 
@@ -333,7 +357,7 @@ const Profile = () => {
                 {user.role === 'admin' ? 'Back to Dashboard' : 'Continue Shopping'}
               </button>
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutConfirm(true)}
                 className="flex items-center justify-center gap-2 flex-1 border-2 border-red-500 text-red-500 font-bold py-3 px-6 rounded-xl hover:bg-red-50 transition-all"
               >
                 <FaSignOutAlt /> Sign Out
@@ -342,6 +366,43 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal Popup */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop Overlay */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setShowLogoutConfirm(false)}
+          ></div>
+          
+          {/* Modal Content Card */}
+          <div className="relative bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="text-center">
+              <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600">
+                <FaSignOutAlt className="text-2xl" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight italic">Leaving?</h3>
+              <p className="text-gray-500 font-bold text-sm mb-8 leading-relaxed">Are you sure you want to end your session?</p>
+              
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-red-600 text-white font-black py-4 rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 uppercase tracking-widest text-xs active:scale-95"
+                >
+                  Yes, Sign Me Out
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="w-full bg-gray-100 text-gray-500 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all uppercase tracking-widest text-xs"
+                >
+                  Stay Logged In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

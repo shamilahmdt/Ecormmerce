@@ -44,6 +44,18 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
+  const withdrawFunds = async (amount) => {
+    try {
+      const res = await API.post("/wallet/withdraw", { amount });
+      setBalance(res.data.balance);
+      toast.success("Funds withdrawn successfully");
+      return res.data.balance;
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to withdraw funds");
+      throw err;
+    }
+  };
+
   return (
     <WalletContext.Provider
       value={{
@@ -51,6 +63,7 @@ export const WalletProvider = ({ children }) => {
         loading,
         fetchBalance,
         addFunds,
+        withdrawFunds,
       }}
     >
       {children}

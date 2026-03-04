@@ -1,12 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useWallet } from "../context/WalletContext";
+import { FaBars } from "react-icons/fa";
+import Sidebar from "./Sidebar";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("loggedInUser")));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const refreshUser = () => {
+      setUser(JSON.parse(localStorage.getItem("loggedInUser")));
+    };
+
+    window.addEventListener("userUpdate", refreshUser);
+    window.addEventListener("storage", refreshUser);
+    
+    return () => {
+      window.removeEventListener("userUpdate", refreshUser);
+      window.removeEventListener("storage", refreshUser);
+    };
+  }, []);
 
   const { cart } = useCart();
   const { wishlist } = useWishlist();
@@ -18,75 +35,72 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="bg-black text-white flex justify-between items-center p-4">
-      <div className="flex space-x-4 items-center">
-        {user?.role === "admin" && (
-          <>
-            <Link to="/dashboard" className="hover:underline">
-              Dashboard
-            </Link>
-            <Link to="/add-product" className="hover:underline">
-              Add Product
-            </Link>
-            <Link to="/admin-orders" className="hover:underline">
-              All Orders
-            </Link>
-            <Link to="/coupons" className="hover:underline">
-              Coupons
-            </Link>
-          </>
-        )}
-
-        {user?.role === "user" && (
-          <>
-            <Link to="/" className="hover:underline">
-              Home
-            </Link>
-
-            <Link to="/wishlist" className="hover:underline">
-              Wishlist ({wishlist.length})
-            </Link>
-
-            <Link to="/cart" className="hover:underline">
-              Cart ({totalItems})
-            </Link>
-
-            <Link to="/orders" className="hover:underline">
-              My Orders
-            </Link>
-
-            <Link to="/wallet" className="hover:underline">
-              Wallet
-            </Link>
-          </>
-        )}
-      </div>
-
-      {user && (
-        <div className="flex items-center space-x-6">
-          <Link
-            to="/profile"
-            className="group relative flex items-center justify-center"
-            title="My Profile"
+    <>
+      <nav className="bg-black text-white flex justify-between items-center p-4 sticky top-0 z-30">
+        {/* Left: Menu Icon */}
+        <div className="flex items-center">
+          <button
+            onMouseEnter={() => setIsSidebarOpen(true)}
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
-            <div className="w-10 h-10 rounded-full border-2 border-transparent group-hover:border-white transition-all overflow-hidden bg-white/10 flex items-center justify-center p-[2px]">
-              <img
-                src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  user.fullName
-                )}&background=random&size=40&rounded=true`}
-                alt="Profile"
-                className="w-full h-full rounded-full object-cover shadow-lg group-hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-            
-            {/* Tooltip on hover */}
-            <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-              View Profile
-            </span>
+            <FaBars className="text-2xl" />
+          </button>
+        </div>
+
+        {/* Center: Logo (Optional but looks premium) */}
+        <div className="absolute left-1/2 -translate-x-1/2">
+          <Link to={user?.role === "admin" ? "/dashboard" : "/"} className="text-xl font-black tracking-tighter">
+            ECOMMERCE
           </Link>
         </div>
-      )}
-    </nav>
+
+        {/* Right: Profile Icon */}
+        {user && (
+          <div className="flex items-center space-x-6">
+            <Link
+              to="/profile"
+              className="group relative flex items-center justify-center"
+              title="My Profile"
+            >
+              <div className="w-10 h-10 rounded-full border-2 border-white/20 group-hover:border-white transition-all overflow-hidden bg-gray-800 flex items-center justify-center">
+                {user.profileImage ? (
+                  <img
+                    key={user.profileImage}
+                    src={user.profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=random&size=40`;
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=random&size=40`}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              
+              {/* Tooltip on hover */}
+              <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none tracking-widest font-bold">
+                VIEW PROFILE
+              </span>
+            </Link>
+          </div>
+        )}
+      </nav>
+
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+        user={user}
+        cartCount={totalItems}
+        wishlistCount={wishlist.length}
+      />
+    </>
   );
 };
 

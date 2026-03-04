@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useWishlist } from "../context/WishlistContext";
-import { useCart } from "../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
+import { useCart } from "../../context/CartContext";
 import toast from "react-hot-toast";
 
 export default function WishlistPage() {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api";
-// import { firestore } from "../firebaseConfig";
+import API from "../../api";
+// import { firestore } from "../../firebaseConfig";
 // import { collection, addDoc } from "firebase/firestore";
 import { PulseLoader  } from "react-spinners";
 
