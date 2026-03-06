@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL = `http://${window.location.hostname}:5000/api`;
+export const SOCKET_URL = `http://${window.location.hostname}:5000`;
 
 const API = axios.create({
   baseURL: API_BASE_URL,

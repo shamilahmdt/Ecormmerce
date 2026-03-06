@@ -53,8 +53,8 @@ export default function AuthenticationForm() {
         await mergeCart();
         await mergeWishlist();
 
-        if (user.role === "admin") window.location.href = "/dashboard";
-        else window.location.href = "/";
+        if (user.role === "admin") navigate("/dashboard");
+        else navigate("/");
         return;
       }
 
@@ -71,14 +71,17 @@ export default function AuthenticationForm() {
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("loggedInUser", JSON.stringify(user));
 
+      // Force state refresh across app
+      window.dispatchEvent(new Event("userUpdate"));
+
       // Trigger Merge
       await mergeCart();
       await mergeWishlist();
 
       toast.success("Login successful!");
 
-      if (user.role === "admin") window.location.href = "/dashboard";
-      else window.location.href = "/";
+      if (user.role === "admin") navigate("/dashboard");
+      else navigate("/");
 
       setPhone("");
       setPassword("");

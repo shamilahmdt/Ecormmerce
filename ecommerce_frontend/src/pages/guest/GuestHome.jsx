@@ -3,7 +3,7 @@ import { GridLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import API from "../../api";
 
 const FILTER_TAGS = ["ALL", "NEW", "BEST SELLERS"];
@@ -114,9 +114,12 @@ const GuestHome = () => {
               key={product.id}
               className="bg-white rounded-xl sm:rounded-2xl shadow-sm sm:shadow-md hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden group border border-gray-100 sm:border-none"
             >
-              <div className="relative bg-gray-50 h-40 sm:h-64 flex items-center justify-center p-2 sm:p-4">
+              <div className="relative bg-gray-50 h-40 sm:h-64 flex items-center justify-center p-2 sm:p-4 cursor-pointer overflow-hidden" onClick={() => navigate(`/product/${product.id}`)}>
                 <button
-                  onClick={() => toggleWishlist(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product);
+                  }}
                   className="absolute top-2 right-2 z-10 bg-white/80 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm hover:scale-110 transition"
                 >
                   {isInWishlist(product.id) ? (
@@ -138,9 +141,21 @@ const GuestHome = () => {
                   {product.category}
                 </p>
 
-                <h2 className="text-sm sm:text-lg font-bold mt-0.5 sm:mt-1 line-clamp-1 text-gray-800">
+                <h2 
+                  className="text-sm sm:text-lg font-bold mt-0.5 sm:mt-1 line-clamp-1 text-gray-800 cursor-pointer hover:text-indigo-600 transition-colors"
+                  onClick={() => navigate(`/product/${product.id}`)}
+                >
                   {product.name}
                 </h2>
+
+                <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                  <div className="flex text-yellow-400 text-[8px] sm:text-[10px]">
+                    <FaStar />
+                  </div>
+                  <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                    {product.averageRating || "4.8"} ({product.reviewCount || 0})
+                  </span>
+                </div>
 
                 <p className="text-base sm:text-lg font-black mt-1 sm:mt-2 text-black">
                   ₹{product.price}

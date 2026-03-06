@@ -3,7 +3,7 @@ import { GridLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaStar } from "react-icons/fa";
 import toast from "react-hot-toast";
 import API from "../../api";
 
@@ -81,7 +81,7 @@ const ProductList = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
         <input
           type="text"
-          placeholder="Search items..."
+          placeholder="Search by name or Catalog Tag..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-1/3 px-3 py-2 text-xs border rounded-xl bg-gray-50 focus:outline-none focus:ring-1 focus:ring-black shadow-sm"
@@ -119,10 +119,13 @@ const ProductList = () => {
                 className="bg-white rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group border border-gray-50"
               >
                 {/* IMAGE + WISHLIST */}
-                <div className="relative bg-gray-50 h-32 sm:h-64 flex items-center justify-center p-2 sm:p-6">
+                <div className="relative bg-gray-50 h-32 sm:h-64 flex items-center justify-center p-2 sm:p-6 cursor-pointer overflow-hidden" onClick={() => navigate(`/product/${product.id}`)}>
                   {/* ❤️ Wishlist Icon */}
                   <button
-                    onClick={() => toggleWishlist(product)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleWishlist(product);
+                    }}
                     className="absolute top-1.5 right-1.5 z-10 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:scale-110 transition"
                   >
                     {isInWishlist(product.id) ? (
@@ -151,9 +154,21 @@ const ProductList = () => {
                     {product.category || "General"}
                   </p>
 
-                  <h2 className="text-[10px] sm:text-lg font-black mt-0.5 sm:mt-1 line-clamp-1 text-gray-800 uppercase tracking-tight">
+                  <h2 
+                    className="text-[10px] sm:text-lg font-black mt-0.5 sm:mt-1 line-clamp-1 text-gray-800 uppercase tracking-tight cursor-pointer hover:text-indigo-600 transition-colors"
+                    onClick={() => navigate(`/product/${product.id}`)}
+                  >
                     {product.name}
                   </h2>
+
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex text-yellow-400 text-[8px] sm:text-[10px]">
+                      <FaStar />
+                    </div>
+                    <span className="text-[7px] sm:text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                      {product.averageRating || "4.8"} ({product.reviewCount || 0})
+                    </span>
+                  </div>
 
                   <p className="text-xs sm:text-xl font-black mt-1 sm:mt-2 text-black italic">
                     ₹{product.price.toLocaleString()}

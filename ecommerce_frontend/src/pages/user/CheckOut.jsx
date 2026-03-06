@@ -5,6 +5,7 @@ import { useWallet } from "../../context/WalletContext";
 import toast from "react-hot-toast";
 import API from "../../api";
 import { FaTicketAlt, FaWallet, FaCheckCircle, FaTrashAlt, FaTag, FaShoppingCart } from "react-icons/fa";
+import SwipeConfirm from "../../components/SwipeConfirm";
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -17,12 +18,12 @@ const Checkout = () => {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [couponCode, setCouponCode] = useState("");
     
-    const total = subtotal - discount;
-    const cashback = Math.floor(total * 0.02);
-
     const [modalOpen, setModalOpen] = useState(false);
     const [isWalletChecked, setIsWalletChecked] = useState(false);
     const [walletAmount, setWalletAmount] = useState(0);
+    
+    const total = subtotal - discount;
+    const cashback = Math.floor(walletAmount * 0.02);
     const [loading, setLoading] = useState(false);
     const [redeemLoading, setRedeemLoading] = useState(false);
     const [liveProducts, setLiveProducts] = useState([]);
@@ -98,7 +99,7 @@ const Checkout = () => {
 
         setLoading(true);
         try {
-            await API.post("/orders", {
+            const response = await API.post("/orders", {
                 items: cart,
                 total,
                 walletAmountUsed: walletAmount,
@@ -109,7 +110,7 @@ const Checkout = () => {
             toast.success(`Order placed! Earned ₹${cashback} cashback.`);
             clearCart();
             fetchBalance();
-            navigate("/order-placed");
+            navigate("/order-placed", { state: { orders: response.data.orders } });
         } catch (err) {
             console.error("Error placing order:", err);
             toast.error(err.response?.data?.error || "Failed to place order.");
@@ -147,11 +148,11 @@ const Checkout = () => {
                     
                     {/* LEFT COLUMN: Order Items & Coupons */}
                     <div className="space-y-6 sm:space-y-8">
-                        <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 h-fit">
+                        <div className="bg-white p-5 sm:p-8 rounded-[2rem] shadow-xl border border-gray-100 h-fit">
                             <h2 className="text-lg sm:text-xl font-black mb-6 flex items-center gap-2">
                                 <FaShoppingCart className="text-black" /> Your Items
                             </h2>
-                            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 sm:pr-4 scrollbar-hide">
+                            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 sm:pr-4 custom-scrollbar">
                                 {cart.map((item) => (
                                     <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 group transition-all hover:bg-white hover:shadow-md">
                                         <div className="flex items-center gap-3 sm:gap-4 overflow-hidden">
@@ -170,7 +171,7 @@ const Checkout = () => {
                         </div>
 
                         {/* Coupon Section */}
-                        <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100">
+                        <div className="bg-white p-5 sm:p-8 rounded-[2rem] shadow-xl border border-gray-100">
                             <h2 className="text-lg sm:text-xl font-black mb-6 flex items-center gap-2">
                                 <FaTicketAlt className="text-indigo-600" /> Apply Coupon
                             </h2>
@@ -191,18 +192,24 @@ const Checkout = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <input 
-                                        type="text" 
-                                        placeholder="CODE..." 
-                                        className="flex-grow px-4 sm:px-5 py-3 sm:py-4 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-black focus:bg-white outline-none font-bold uppercase tracking-widest transition-all text-sm sm:text-base"
-                                        value={couponCode}
-                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    />
+                                <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                                    <div className="flex-grow">
+                                        <input 
+                                            type="text" 
+                                            placeholder="CODE..." 
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black focus:bg-white outline-none font-black uppercase tracking-[0.2em] transition-all text-xs sm:text-sm"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        />
+                                    </div>
                                     <button 
                                         disabled={redeemLoading || !couponCode}
                                         onClick={handleApplyCoupon}
-                                        className={`px-6 sm:px-8 py-3 sm:py-0 rounded-xl sm:rounded-2xl font-black shadow-lg transition-all text-sm sm:text-base ${redeemLoading || !couponCode ? 'bg-gray-200 text-gray-400' : 'bg-black text-white hover:bg-gray-800 active:scale-95 shadow-gray-300'}`}
+                                        className={`px-8 py-4 sm:py-0 rounded-2xl font-black shadow-lg transition-all text-xs sm:text-sm tracking-widest min-w-[120px] ${
+                                            redeemLoading || !couponCode 
+                                            ? 'bg-gray-100 text-gray-300' 
+                                            : 'bg-black text-white hover:bg-gray-800 active:scale-[0.98] shadow-black/5'
+                                        }`}
                                     >
                                         {redeemLoading ? '...' : 'APPLY'}
                                     </button>
@@ -212,9 +219,9 @@ const Checkout = () => {
                     </div>
 
                     {/* RIGHT COLUMN: Bills & Payment */}
-                    <div className="space-y-6 sm:space-y-8">
+                    <div className="space-y-6 sm:space-y-8 lg:sticky lg:top-8 h-fit">
                         {/* Summary Card */}
-                        <div className="bg-black text-white p-6 sm:p-8 rounded-[30px] sm:rounded-[40px] shadow-2xl relative overflow-hidden group">
+                        <div className="bg-black text-white p-6 sm:p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
                             {/* Decorations */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12 group-hover:scale-150 transition-transform duration-1000 delay-100"></div>
@@ -236,9 +243,30 @@ const Checkout = () => {
                                     <span className="text-base sm:text-lg font-black text-white">Grand Total</span>
                                     <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">₹{total}</span>
                                 </div>
-                                <div className="bg-white/10 p-3 rounded-xl flex justify-between items-center text-[10px] sm:text-xs">
-                                    <span className="text-green-400">✨ Potential Cashback</span>
-                                    <span className="text-white">+ ₹{cashback}</span>
+                                <div className="bg-white/10 p-4 rounded-2xl flex flex-col gap-2">
+                                    <div className="flex justify-between items-center text-[10px] sm:text-xs">
+                                        <span className="text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                                            <FaTag className="text-[10px]" /> Wallet Cashback
+                                        </span>
+                                        <span className={`font-black tracking-tighter transition-all ${cashback > 0 ? 'text-white' : 'text-gray-500'}`}>+ ₹{cashback.toLocaleString()}</span>
+                                    </div>
+                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight leading-normal">
+                                        {walletAmount > 0 
+                                            ? `2% Earned on ₹${walletAmount.toLocaleString()} wallet usage`
+                                            : "Pay via wallet to earn 2% cashback"}
+                                    </p>
+                                </div>
+
+                                {/* RETURN POLICY HIGHLIGHT */}
+                                <div className="mt-4 bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-center gap-4 group/return">
+                                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0 shadow-lg shadow-green-500/20">
+                                        <span className="text-white text-base">↩</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-green-400 uppercase tracking-widest leading-none mb-1">Lifetime Policy</p>
+                                        <h4 className="text-white font-black text-xs uppercase tracking-tight">Unlimited Returns</h4>
+                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter leading-none mt-1">Available for all delivered items</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -246,34 +274,47 @@ const Checkout = () => {
                             <div className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl transition-all duration-300 ${isWalletChecked ? 'bg-indigo-600/20 border-2 border-indigo-400/30' : 'bg-white/5 border border-white/10'}`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={isWalletChecked} 
-                                            onChange={(e) => setIsWalletChecked(e.target.checked)}
-                                            className="w-4 h-4 sm:w-5 sm:h-5 accent-indigo-500 cursor-pointer"
-                                        />
+                                        <div className="relative flex items-center justify-center">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={isWalletChecked} 
+                                                onChange={(e) => setIsWalletChecked(e.target.checked)}
+                                                className="w-5 h-5 sm:w-6 sm:h-6 accent-indigo-500 cursor-pointer appearance-none border-2 border-white/20 rounded-lg checked:bg-indigo-500 checked:border-indigo-500 transition-all"
+                                            />
+                                            {isWalletChecked && (
+                                                <FaCheckCircle className="absolute pointer-events-none text-white text-[10px]" />
+                                            )}
+                                        </div>
                                         <div>
-                                            <p className="font-black text-white text-sm sm:text-base">Use Wallet Balance</p>
-                                            <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase tracking-widest">Available: ₹{balance}</p>
+                                            <p className="font-black text-white text-sm sm:text-base leading-none mb-1">Use Wallet Balance</p>
+                                            <p className="text-[8px] sm:text-[10px] text-gray-400 uppercase tracking-widest leading-none">Available: ₹{balance.toLocaleString()}</p>
                                         </div>
                                     </div>
-                                    <FaWallet className={`text-lg sm:text-xl ${isWalletChecked ? 'text-indigo-400' : 'text-gray-600'}`} />
+                                    <FaWallet className={`text-lg sm:text-xl transition-colors duration-300 ${isWalletChecked ? 'text-indigo-400' : 'text-gray-600'}`} />
                                 </div>
 
                                 {isWalletChecked && (
                                     <div className="animate-in slide-in-from-top-2 duration-300 space-y-4">
-                                        <div className="flex flex-col sm:flex-row items-center gap-2">
-                                            <input 
-                                                type="number"
-                                                value={walletAmount || ""}
-                                                onChange={(e) => {
-                                                    const val = e.target.value === "" ? 0 : Number(e.target.value);
-                                                    setWalletAmount(Math.min(val, balance, total));
-                                                }}
-                                                className="w-full sm:flex-grow bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white font-black outline-none focus:ring-1 focus:ring-indigo-400 placeholder-white/30 text-sm"
-                                                placeholder="0"
-                                            />
-                                            <button onClick={() => setWalletAmount(Math.min(balance, total))} className="w-full sm:w-auto text-[10px] bg-white/20 px-4 py-2 rounded-xl hover:bg-white/30 transition-colors uppercase tracking-widest font-black">Max</button>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative flex-grow">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 font-black text-xs">₹</span>
+                                                <input 
+                                                    type="number"
+                                                    value={walletAmount || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                                        setWalletAmount(Math.min(val, balance, total));
+                                                    }}
+                                                    className="w-full bg-white/10 border border-white/20 rounded-xl pl-8 pr-4 py-3 text-white font-black outline-none focus:ring-1 focus:ring-indigo-400 placeholder-white/30 text-sm no-spinner"
+                                                    placeholder="0"
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={() => setWalletAmount(Math.min(balance, total))} 
+                                                className="bg-white/20 px-4 py-3 rounded-xl hover:bg-white/30 transition-all uppercase tracking-widest font-black text-[9px] h-full"
+                                            >
+                                                Max
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -299,7 +340,7 @@ const Checkout = () => {
 
                             <button
                                 onClick={() => setModalOpen(true)}
-                                className="w-full bg-white text-black text-lg sm:text-xl font-black py-4 sm:py-5 rounded-2xl sm:rounded-3xl shadow-2xl mt-8 sm:mt-10 hover:bg-gray-50 active:scale-95 transition-all shadow-white/5 tracking-tighter"
+                                className="w-full bg-white text-black text-lg sm:text-xl font-black py-5 sm:py-6 rounded-2xl sm:rounded-3xl shadow-2xl mt-8 sm:mt-10 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-white/5 tracking-tighter uppercase"
                             >
                                 PLACE ORDER
                             </button>
@@ -310,9 +351,9 @@ const Checkout = () => {
                 {/* Confirm Modal */}
                 {modalOpen && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-                        <div className="bg-white p-6 sm:p-10 rounded-[30px] sm:rounded-[40px] shadow-2xl max-w-sm w-full text-center animate-in zoom-in duration-300 border-t-8 border-indigo-600">
-                            <h2 className="text-2xl sm:text-3xl font-black mb-2 tracking-tighter">Final Step!</h2>
-                            <p className="text-sm sm:text-base text-gray-400 font-bold mb-6 sm:mb-8">Confirm your payment split</p>
+                        <div className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-2xl max-w-sm w-full text-center animate-in zoom-in duration-300 border-t-8 border-indigo-600 relative">
+                            <h2 className="text-3xl font-black mb-1 tracking-tighter uppercase">Final Step!</h2>
+                            <p className="text-xs text-gray-400 font-bold mb-8 uppercase tracking-widest">Confirm your payment split</p>
                             
                             <div className="bg-gray-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 text-left mb-6 sm:mb-8 border border-gray-100">
                                 {walletAmount > 0 && (
@@ -328,23 +369,20 @@ const Checkout = () => {
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center pt-2">
-                                    <span className="text-[10px] font-bold text-green-600 uppercase">Cashback</span>
-                                    <span className="font-black text-green-600">+ ₹{cashback}</span>
+                                    <span className="text-[10px] font-bold text-indigo-600 uppercase">Wallet Cashback</span>
+                                    <span className="font-black text-indigo-600">+ ₹{cashback}</span>
                                 </div>
                             </div>
                             
                             <div className="flex flex-col gap-3">
-                                <button
-                                    disabled={loading}
-                                    onClick={handlePlaceOrder}
-                                    className={`py-4 sm:py-5 rounded-2xl text-white text-lg sm:text-xl font-black tracking-tighter shadow-xl shadow-indigo-100 transition-all active:scale-95 ${loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                                >
-                                    {loading ? 'PROCESSING...' : 'CONFIRM NOW'}
-                                </button>
+                                <SwipeConfirm 
+                                    onConfirm={handlePlaceOrder} 
+                                    isLoading={loading} 
+                                />
                                 <button
                                     disabled={loading}
                                     onClick={() => setModalOpen(false)}
-                                    className="py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-100 font-black text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all uppercase tracking-widest text-[10px]"
+                                    className="mt-2 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-gray-100 font-black text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all uppercase tracking-widest text-[10px]"
                                 >
                                     Go Back
                                 </button>

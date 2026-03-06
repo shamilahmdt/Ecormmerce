@@ -1,14 +1,16 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { FaHome, FaHeart, FaShoppingCart, FaClipboardList, FaWallet, FaTachometerAlt, FaPlus, FaTicketAlt, FaTimes, FaSignOutAlt, FaChartBar } from "react-icons/fa";
+import { useNavigate, Link } from "react-router-dom";
+import { FaHome, FaHeart, FaShoppingCart, FaClipboardList, FaWallet, FaTachometerAlt, FaPlus, FaTicketAlt, FaTimes, FaSignOutAlt, FaChartBar, FaChartLine } from "react-icons/fa";
 
 const Sidebar = ({ isOpen, onClose, user, cartCount, wishlistCount }) => {
+  const navigate = useNavigate();
   const adminLinks = [
     { name: "Dashboard", path: "/dashboard", icon: <FaTachometerAlt /> },
     { name: "Add Product", path: "/add-product", icon: <FaPlus /> },
     { name: "All Orders", path: "/admin-orders", icon: <FaClipboardList /> },
     { name: "Coupons", path: "/coupons", icon: <FaTicketAlt /> },
     { name: "Report", path: "/report", icon: <FaChartBar /> },
+    { name: "Analytics", path: "/analytics", icon: <FaChartLine /> },
   ];
 
   const userLinks = [
@@ -41,14 +43,15 @@ const Sidebar = ({ isOpen, onClose, user, cartCount, wishlistCount }) => {
   const handleLogout = () => {
     localStorage.removeItem("loggedInUser");
     localStorage.removeItem("token");
-    window.location.href = "/auth";
+    window.dispatchEvent(new Event("userUpdate"));
+    navigate("/auth");
   };
 
   return (
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/50 z-[999] transition-opacity duration-300 ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
@@ -56,7 +59,7 @@ const Sidebar = ({ isOpen, onClose, user, cartCount, wishlistCount }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-[1000] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         onMouseLeave={onClose}

@@ -142,7 +142,7 @@ const Profile = () => {
     localStorage.removeItem("loggedInUser");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    window.location.href = "/auth";
+    navigate("/auth");
   };
 
   if (!user) return (
@@ -196,7 +196,7 @@ const Profile = () => {
               <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'}`}>
                 {user.role}
               </span>
-              <span className="text-sm text-gray-400">• Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+              <span className="text-sm text-gray-400">• Joined {new Date(user.createdAt).toLocaleDateString("en-GB")}</span>
             </div>
 
             {editing ? (
@@ -341,7 +341,7 @@ const Profile = () => {
                     <div>
                       <p className="text-[8px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest leading-tight">Last Update</p>
                       <p className="text-xs sm:text-lg font-bold text-gray-700 mt-0.5">
-                        {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "Just now"}
+                        {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString("en-GB") : "Just now"}
                       </p>
                     </div>
                   </div>

@@ -21,7 +21,7 @@ const formatDate = (dateInput) => {
 
   if (isNaN(date.getTime())) return "-";
   return date
-    .toLocaleString("en-IN", {
+    .toLocaleString("en-GB", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -136,7 +136,7 @@ function AdminReport() {
             <div className="relative flex-grow">
               <input
                 type="text"
-                placeholder="Search name, product, Category..."
+                placeholder="Search name, product, Catalog Tag..."
                 className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-100 bg-gray-50 font-bold text-xs outline-none focus:ring-2 focus:ring-black transition-all"
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
@@ -156,6 +156,9 @@ function AdminReport() {
               <option value="Out for Delivery">Out</option>
               <option value="Delivered">Delivered</option>
               <option value="Cancelled">Cancelled</option>
+              <option value="ReturnProduct">ReturnProduct</option>
+              <option value="Refund Proceed">Refund Proceed</option>
+              <option value="Refunded">Refunded</option>
             </select>
           </div>
 
@@ -224,6 +227,9 @@ function AdminReport() {
                         <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
                           item.status === 'Delivered' ? 'bg-green-50 text-green-600' : 
                           item.status === 'Cancelled' ? 'bg-red-50 text-red-500' : 
+                          item.status === 'ReturnProduct' ? 'bg-orange-50 text-orange-500' : 
+                          item.status === 'Refund Proceed' ? 'bg-purple-50 text-purple-600' : 
+                          item.status === 'Refunded' ? 'bg-indigo-50 text-indigo-600' : 
                           'bg-yellow-50 text-yellow-600'
                         }`}>
                           {item.status || "Pending"}
@@ -250,6 +256,9 @@ function AdminReport() {
                     <span className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
                       item.status === 'Delivered' ? 'bg-green-50 text-green-600' : 
                       item.status === 'Cancelled' ? 'bg-red-50 text-red-500' : 
+                      item.status === 'ReturnProduct' ? 'bg-orange-50 text-orange-500' : 
+                      item.status === 'Refund Proceed' ? 'bg-purple-50 text-purple-600' : 
+                      item.status === 'Refunded' ? 'bg-indigo-50 text-indigo-600' : 
                       'bg-yellow-50 text-yellow-600'
                     }`}>
                       {item.status || "Pending"}

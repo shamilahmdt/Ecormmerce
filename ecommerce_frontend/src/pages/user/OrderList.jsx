@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import API from "../../api";
-// import { firestore } from "../../firebaseConfig";
-// import { doc, getDoc, setDoc } from "firebase/firestore";
 import { GridLoader } from "react-spinners";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { io } from "socket.io-client";
+import { SOCKET_URL } from "../../api";
+import { FaDownload } from "react-icons/fa";
+import { generateInvoice } from "../../utils/invoiceGenerator";
 
 const formatDate = (dateInput) => {
   if (!dateInput) return "-";
@@ -13,7 +15,19 @@ const formatDate = (dateInput) => {
   else if (dateInput._seconds) date = new Date(dateInput._seconds * 1000);
   else date = new Date(dateInput);
 
-  return isNaN(date.getTime()) ? "-" : date.toLocaleString();
+  return isNaN(date.getTime()) ? "-" : date.toLocaleDateString("en-GB");
+};
+
+const checkReturnLimit = (order) => {
+  if (order.status !== "Delivered") return false;
+  
+  const referenceDate = order.deliveredAt ? 
+    (order.deliveredAt.seconds ? new Date(order.deliveredAt.seconds * 1000) : new Date(order.deliveredAt)) :
+    (order.date ? new Date(order.date) : (order.CREATED_AT?.seconds ? new Date(order.CREATED_AT.seconds * 1000) : new Date()));
+
+  const diffTime = Math.abs(new Date() - referenceDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays <= 5;
 };
 
 const OrderList = () => {
@@ -52,6 +66,58 @@ const OrderList = () => {
 
   useEffect(() => {
     fetchOrders(1);
+
+    const socket = io(SOCKET_URL);
+
+    socket.on("order-status-updated", (data) => {
+      const { orderId, displayOrderId, status } = data;
+      
+      setOrders((prevOrders) => {
+        const orderExists = prevOrders.some(o => 
+          o.id === orderId || (o.displayOrderId || o.orderId) === displayOrderId
+        );
+
+        if (orderExists) {
+            if (status === "Refunded") {
+              toast.success(`RECEIVED: ₹${data.total} Refunded to Wallet`, {
+                icon: '💰',
+                duration: 6000,
+                style: {
+                  borderRadius: '12px',
+                  background: '#1e1b4b',
+                  color: '#fff',
+                  fontSize: '11px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  border: '1px solid #4338ca'
+                }
+              });
+            } else {
+              toast.success(`Order #${displayOrderId} updated to ${status}`, {
+                  icon: '📦',
+                  duration: 4000
+              });
+            }
+            return prevOrders.map(o => 
+                (o.id === orderId || (o.displayOrderId || o.orderId) === displayOrderId)
+                ? { ...o, status }
+                : o
+            );
+        }
+        return prevOrders;
+      });
+    });
+
+    socket.on("new-order", (newOrder) => {
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (loggedInUser && newOrder.userPhone === loggedInUser.phone) {
+          setOrders(prev => [newOrder, ...prev]);
+          toast.success("New order placed successfully!", { icon: "🆕" });
+      }
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   const handlePageChange = (newPage) => {
@@ -92,7 +158,7 @@ const OrderList = () => {
                 status:
                   actionModal.type === "cancel"
                     ? "Cancelled"
-                    : "ReturnRequested",
+                    : "ReturnProduct",
                 cancelReason:
                   actionModal.type === "cancel" ? actionReason : o.cancelReason,
                 returnReason:
@@ -104,7 +170,8 @@ const OrderList = () => {
 
       toast.success("Order updated successfully!");
     } catch (err) {
-      toast.error("Failed to process action.");
+      const errorMsg = err.response?.data?.error || "Failed to process action.";
+      toast.error(errorMsg);
     } finally {
       setActionModal({ open: false, orderId: null, type: "" });
       setActionReason("");
@@ -171,7 +238,9 @@ const OrderList = () => {
                     <span
                       className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 ${
                         order.status === "Cancelled" ? "bg-red-100 text-red-500" :
-                        order.status === "ReturnRequested" ? "bg-orange-100 text-orange-500" :
+                        order.status === "ReturnProduct" ? "bg-orange-100 text-orange-500" :
+                        order.status === "Refund Proceed" ? "bg-purple-100 text-purple-600" :
+                        order.status === "Refunded" ? "bg-indigo-100 text-indigo-600" :
                         order.status === "Delivered" ? "bg-green-100 text-green-600" :
                         order.status === "Dispatched" ? "bg-blue-100 text-blue-600" :
                         "bg-yellow-100 text-yellow-600"
@@ -239,6 +308,13 @@ const OrderList = () => {
                         Request Return
                       </button>
                     ) : null}
+                    
+                    <button
+                      onClick={() => generateInvoice([order])}
+                      className="flex-1 border-2 border-gray-100 text-gray-400 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs hover:bg-gray-50 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2"
+                    >
+                      <FaDownload className="text-[10px]" /> Invoice
+                    </button>
                   </div>
 
                   {/* Reasons */}

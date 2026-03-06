@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import AuthenticationForm from "./pages/auth/AuthenticationForm";
 import Dashboard from "./pages/admin/Dashboard";
@@ -7,6 +7,7 @@ import EditProduct from "./pages/admin/EditProduct";
 import AdminOrderList from "./pages/admin/AdminOrderList";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReport from "./pages/admin/AdminReport";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import ProtectedRoute from "./Routes/ProtectedRoute";
 import ProductList from "./pages/user/ProductList";
 import Cart from "./pages/user/Cart";
@@ -22,9 +23,26 @@ import Profile from "./pages/user/Profile";
 import GuestHome from "./pages/guest/GuestHome";
 import GuestCart from "./pages/guest/GuestCart";
 import GuestWishlist from "./pages/guest/GuestWishlist";
+import ProductDetail from "./pages/guest/ProductDetail";
+
+import { useState, useEffect } from "react";
 
 function App() {
-  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("loggedInUser")));
+
+  useEffect(() => {
+    const refreshUser = () => {
+      setUser(JSON.parse(localStorage.getItem("loggedInUser")));
+    };
+
+    window.addEventListener("userUpdate", refreshUser);
+    window.addEventListener("storage", refreshUser);
+    
+    return () => {
+      window.removeEventListener("userUpdate", refreshUser);
+      window.removeEventListener("storage", refreshUser);
+    };
+  }, []);
 
   return (
 
@@ -51,15 +69,24 @@ function App() {
          <Route path="/admin-orders" element={<ProtectedRoute role="admin"><AdminOrderList /></ProtectedRoute>} />
          <Route path="/coupons" element={<ProtectedRoute role="admin"><AdminCoupons /></ProtectedRoute>} />
          <Route path="/report" element={<ProtectedRoute role="admin"><AdminReport /></ProtectedRoute>} />
+         <Route path="/analytics" element={<ProtectedRoute role="admin"><AdminAnalytics /></ProtectedRoute>} />
           
           {/* Guest Routes */}
           <Route path="/guest-home" element={<GuestHome />} />
           <Route path="/guest-cart" element={<GuestCart />} />
           <Route path="/guest-wishlist" element={<GuestWishlist />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
 
           {/* User Routes (Now handle guest state or redirect internally if needed) */}
           {/* We'll make / public but it will show ProductList which now works with Guest Contexts */}
-          <Route path="/" element={user ? <ProductList /> : <GuestHome />} />
+          <Route 
+            path="/" 
+            element={
+              user?.role === "admin" 
+              ? <Navigate to="/dashboard" replace /> 
+              : (user ? <ProductList /> : <GuestHome />)
+            } 
+          />
           <Route path="/cart" element={user ? <Cart /> : <GuestCart />} />
           <Route path="/wishlist" element={user ? <Wishlist /> : <GuestWishlist />} />
           

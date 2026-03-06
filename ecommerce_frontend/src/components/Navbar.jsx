@@ -34,18 +34,22 @@ const Navbar = () => {
     0
   );
 
+  const isAuthPage = window.location.pathname === "/auth";
+
   return (
     <>
-      <nav className="bg-black text-white flex justify-between items-center p-4 sticky top-0 z-30">
-        {/* Left: Menu Icon */}
-        <div className="flex items-center">
-          <button
-            onMouseEnter={() => setIsSidebarOpen(true)}
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-          >
-            <FaBars className="text-2xl" />
-          </button>
+      <nav className="bg-black text-white flex justify-between items-center p-4 sticky top-0 z-[100]">
+        {/* Left: Menu Icon (Hidden on Auth Page) */}
+        <div className="flex items-center min-w-[40px]">
+          {!isAuthPage && (
+            <button
+              onMouseEnter={() => setIsSidebarOpen(true)}
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <FaBars className="text-2xl" />
+            </button>
+          )}
         </div>
 
         {/* Center: Logo (Optional but looks premium) */}

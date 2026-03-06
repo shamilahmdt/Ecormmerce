@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import API from "../../api";
+import API, { SOCKET_URL } from "../../api";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { GridLoader } from "react-spinners";
 import Select from "react-select";
 import { GrPowerReset } from "react-icons/gr";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
+import { FaDownload } from "react-icons/fa";
+import { generateInvoice } from "../../utils/invoiceGenerator";
 
 const formatDate = (dateInput) => {
   if (!dateInput) return "-";
@@ -16,11 +20,7 @@ const formatDate = (dateInput) => {
 
     if (isNaN(date.getTime())) return "-";
     
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return date.toLocaleDateString("en-GB");
   } catch (e) {
     return "-";
   }
@@ -41,6 +41,7 @@ const AdminOrderList = () => {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [cancelReason, setCancelReason] = useState("");
+  const [refundConfirmOpen, setRefundConfirmOpen] = useState(false);
 
   const fetchOrders = async (page = 1, search = searchTerm, status = filterStatus, date = filterDate) => {
     setLoading(true);
@@ -68,6 +69,37 @@ const AdminOrderList = () => {
 
   useEffect(() => {
     fetchOrders(1);
+
+    const socket = io(SOCKET_URL);
+
+    socket.on("order-status-updated", (data) => {
+      const { orderId, displayOrderId, status } = data;
+      
+      setOrders((prevOrders) => {
+        const orderExists = prevOrders.some(o => 
+          o.id === orderId || (o.displayOrderId || o.orderId) === displayOrderId
+        );
+
+        if (orderExists) {
+            return prevOrders.map(o => 
+                (o.id === orderId || (o.displayOrderId || o.orderId) === displayOrderId)
+                ? { ...o, status }
+                : o
+            );
+        }
+        return prevOrders;
+      });
+    });
+
+    socket.on("new-order", (newOrder) => {
+      setOrders(prev => [newOrder, ...prev]);
+      toast.success(`New order received: #${newOrder.displayOrderId || newOrder.orderId}`, {
+        icon: '🔔',
+        duration: 5000
+      });
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   const handleSearch = () => {
@@ -111,6 +143,15 @@ const AdminOrderList = () => {
   const handleUpdateStatus = async () => {
     if (!currentOrder) return;
 
+    if (newStatus === "Refunded") {
+      setRefundConfirmOpen(true);
+      return;
+    }
+
+    await proceedStatusUpdate();
+  };
+
+  const proceedStatusUpdate = async () => {
     try {
       await API.put(
         `/orders/${currentOrder.displayOrderId || currentOrder.orderId}`,
@@ -120,6 +161,23 @@ const AdminOrderList = () => {
         }
       );
 
+      if (newStatus === "Refunded") {
+        toast.success(`SUCCESS: ₹${currentOrder.total} Refunded to Wallet`, {
+          icon: '💰',
+          style: {
+            borderRadius: '10px',
+            background: '#000',
+            color: '#fff',
+            fontSize: '10px',
+            fontWeight: '900',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }
+        });
+      } else {
+        toast.success(`Status updated to ${newStatus}`);
+      }
+
       setOrders((prev) =>
         prev.map((o) =>
           (o.displayOrderId || o.orderId) === (currentOrder.displayOrderId || currentOrder.orderId)
@@ -128,8 +186,10 @@ const AdminOrderList = () => {
         )
       );
       setModalOpen(false);
+      setRefundConfirmOpen(false);
     } catch (err) {
       console.error("Error updating status:", err);
+      toast.error("Update Failed");
     }
   };
 
@@ -201,7 +261,7 @@ const AdminOrderList = () => {
                   </span>
                   <input
                     type="text"
-                    placeholder="Search receipt, name, category..."
+                    placeholder="Search receipt, name, Catalog Tag..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -214,13 +274,16 @@ const AdminOrderList = () => {
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className="w-full px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-bold outline-none focus:ring-2 focus:ring-black appearance-none"
                 >
-                  <option value="ALL">All Status</option>
+                   <option value="ALL">All Status</option>
                   <option value="Pending">Pending</option>
                   <option value="Processing">Processing</option>
                   <option value="Dispatched">Dispatched</option>
                   <option value="Out for Delivery">Out for Delivery</option>
                   <option value="Delivered">Delivered</option>
                   <option value="Cancelled">Cancelled</option>
+                  <option value="ReturnProduct">ReturnProduct</option>
+                  <option value="Refund Proceed">Refund Proceed</option>
+                  <option value="Refunded">Refunded</option>
                 </select>
 
                 <input
@@ -259,6 +322,9 @@ const AdminOrderList = () => {
                 >
                   <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1/2 rounded-r-full ${
                     order.status === "Cancelled" ? "bg-red-500" :
+                    order.status === "ReturnProduct" ? "bg-orange-500" :
+                    order.status === "Refund Proceed" ? "bg-purple-600" :
+                    order.status === "Refunded" ? "bg-indigo-600" :
                     order.status === "Delivered" ? "bg-green-500" :
                     order.status === "Dispatched" ? "bg-blue-500" :
                     "bg-yellow-500"
@@ -291,6 +357,9 @@ const AdminOrderList = () => {
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-none">Status</p>
                       <p className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.1em] ${
                         order.status === "Cancelled" ? "text-red-500" :
+                        order.status === "ReturnProduct" ? "text-orange-500" :
+                        order.status === "Refund Proceed" ? "text-purple-600" :
+                        order.status === "Refunded" ? "text-indigo-600" :
                         order.status === "Delivered" ? "text-green-600" :
                         order.status === "Dispatched" ? "text-blue-600" :
                         "text-yellow-600"
@@ -301,16 +370,38 @@ const AdminOrderList = () => {
 
                     <div className="col-span-2 md:col-span-1 flex items-center justify-start sm:justify-end gap-2 mt-1 sm:mt-0">
                        <button
+                         onClick={() => generateInvoice([order])}
+                         className="p-2.5 sm:p-3.5 rounded-lg sm:rounded-2xl border-2 border-gray-100 text-gray-400 hover:text-black hover:border-black transition-all active:scale-95 flex items-center justify-center shrink-0"
+                         title="Download Invoice"
+                       >
+                         <FaDownload className="text-xs sm:text-sm" />
+                       </button>
+                       <button
                         onClick={() => openModal(order)}
-                        disabled={order.status === "Delivered" || order.status === "Cancelled"}
+                        disabled={order.status === "Refunded" || (order.status === "Cancelled" && !(order.walletAmountUsed > 0))}
                         className={`px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl font-black uppercase tracking-widest text-[8px] sm:text-[10px] transition-all ${
-                          order.status === "Delivered" || order.status === "Cancelled"
+                          order.status === "Refunded" || (order.status === "Cancelled" && !(order.walletAmountUsed > 0))
                             ? "bg-gray-50 text-gray-300 cursor-not-allowed"
                             : "bg-black text-white hover:bg-indigo-600 shadow-lg active:scale-95"
                         }`}
                       >
                         Update
                       </button>
+
+                      {/* Dedicated Refund Button for Wallet Orders */}
+                      {((order.status === "Cancelled" && order.walletAmountUsed > 0) || 
+                        (["ReturnProduct", "Refund Proceed"].includes(order.status) && order.walletAmountUsed > 0)) && (
+                        <button
+                          onClick={() => {
+                            setCurrentOrder(order);
+                            setNewStatus("Refunded");
+                            setRefundConfirmOpen(true);
+                          }}
+                          className="px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-lg sm:rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-[8px] sm:text-[10px] hover:bg-indigo-700 shadow-lg shadow-indigo-100 active:scale-95 animate-in fade-in zoom-in duration-300 transition-all"
+                        >
+                          Refund
+                        </button>
+                      )}
                       <div className="sm:hidden text-[8px] font-bold text-gray-400 italic">
                         Node: {order.userName?.split(' ')[0]}
                       </div>
@@ -393,7 +484,30 @@ const AdminOrderList = () => {
                         { value: "Out for Delivery", label: "Out for Delivery" },
                         { value: "Delivered", label: "Delivered" },
                         { value: "Cancelled", label: "Cancelled" },
-                      ]}
+                        ...(currentOrder && ["ReturnProduct", "Refund Proceed", "Refunded"].includes(currentOrder.status) 
+                          ? [
+                              { value: "ReturnProduct", label: "ReturnProduct" },
+                              { value: "Refund Proceed", label: "Refund Proceed" },
+                              { value: "Refunded", label: "Refunded" },
+                            ] 
+                          : []
+                        )
+                      ].filter(opt => {
+                        const isReturnFlow = currentOrder && ["ReturnProduct", "Refund Proceed", "Refunded"].includes(currentOrder.status);
+                        const isCancelledWallet = currentOrder && currentOrder.status === "Cancelled" && currentOrder.walletAmountUsed > 0;
+
+                        if (isReturnFlow) {
+                          return ["ReturnProduct", "Refund Proceed", "Refunded"].includes(opt.value);
+                        }
+                        
+                        if (isCancelledWallet) {
+                          // Allow transitioning from Cancelled to Refunded for wallet orders
+                          return ["Cancelled", "Refunded"].includes(opt.value);
+                        }
+
+                        // Otherwise show standard states
+                        return !["ReturnProduct", "Refund Proceed", "Refunded"].includes(opt.value);
+                      })}
                       styles={{
                         control: (base) => ({
                           ...base,
@@ -436,6 +550,36 @@ const AdminOrderList = () => {
                       Go Back
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* REFUND CONFIRMATION MODAL */}
+          {refundConfirmOpen && currentOrder && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-2xl flex items-center justify-center z-[60] p-4">
+              <div className="bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm border border-gray-100 text-center">
+                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-2xl">💰</span>
+                </div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tighter uppercase mb-2">Automated Refund</h2>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed mb-8">
+                  You are about to credit <span className="text-indigo-600">₹{currentOrder.total}</span> directly to <span className="text-black">{currentOrder.userName}'s</span> digital wallet. This action is final.
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={proceedStatusUpdate}
+                    className="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-100/50"
+                  >
+                    Confirm & Refund
+                  </button>
+                  <button
+                    onClick={() => setRefundConfirmOpen(false)}
+                    className="w-full bg-gray-50 text-gray-400 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:text-black transition-all"
+                  >
+                    Abort Action
+                  </button>
                 </div>
               </div>
             </div>
