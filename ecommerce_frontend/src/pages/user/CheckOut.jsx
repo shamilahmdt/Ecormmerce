@@ -6,6 +6,12 @@ import toast from "react-hot-toast";
 import API from "../../api";
 import { FaTicketAlt, FaWallet, FaCheckCircle, FaTrashAlt, FaTag, FaShoppingCart } from "react-icons/fa";
 import SwipeConfirm from "../../components/SwipeConfirm";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import StripePaymentForm from "../../components/StripePaymentForm";
+
+const stripePromise = loadStripe("pk_test_51T8B300RRLfV2lf2WlmhAXONTdX3zuDP234y2H52YPdAcppz9y22MDQXvddiQRt0YNNkwU9AUrCVmt6ifindUFbb00jyFPyGku");
+
 
 const Checkout = () => {
     const navigate = useNavigate();
@@ -26,7 +32,11 @@ const Checkout = () => {
     const cashback = Math.floor(walletAmount * 0.02);
     const [loading, setLoading] = useState(false);
     const [redeemLoading, setRedeemLoading] = useState(false);
+    const [clientSecret, setClientSecret] = useState(null);
     const [liveProducts, setLiveProducts] = useState([]);
+    const [paymentMethod, setPaymentMethod] = useState("COD"); // COD | Stripe
+
+
 
     // Fetch live product data for final stock check
     useEffect(() => {
@@ -99,12 +109,34 @@ const Checkout = () => {
 
         setLoading(true);
         try {
+            if (remainingAmount > 0 && paymentMethod === "Stripe") {
+                const res = await API.post("/payment/create-intent", { amount: remainingAmount });
+                setClientSecret(res.data.clientSecret);
+                setModalOpen(false); // Hide the swipe modal so user sees the online payment form
+                return; // Stop here, user needs to complete Stripe payment
+            }
+
+            // If remainingAmount is 0 or user chose COD, place order immediately
+            await executeOrderPlacement();
+        } catch (err) {
+
+            console.error("Error initiating payment:", err);
+            toast.error(err.response?.data?.error || "Failed to initiate payment.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const executeOrderPlacement = async (paymentIntent = null) => {
+        setLoading(true);
+        try {
             const response = await API.post("/orders", {
                 items: cart,
                 total,
                 walletAmountUsed: walletAmount,
                 couponCode: appliedCoupon?.code || null,
-                discountAmount: discount
+                discountAmount: discount,
+                stripePaymentId: paymentIntent?.id || null // Add this if you want to track stripe ID in order
             });
 
             toast.success(`Order placed! Earned ₹${cashback} cashback.`);
@@ -117,8 +149,10 @@ const Checkout = () => {
         } finally {
             setLoading(false);
             setModalOpen(false);
+            setClientSecret(null);
         }
     };
+
 
     if (cart.length === 0)
         return (
@@ -333,27 +367,61 @@ const Checkout = () => {
                                     </div>
                                 )}
                                 <div className="flex justify-between items-center border-t pt-3 mt-1">
-                                    <span className="font-black text-xs sm:text-sm uppercase">Remaining (COD)</span>
+                                    <span className="font-black text-xs sm:text-sm uppercase">Remaining ({paymentMethod === 'Stripe' ? 'Online' : 'COD'})</span>
                                     <span className="text-xl sm:text-2xl font-black tracking-tight text-red-600">₹{remainingAmount}</span>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setModalOpen(true)}
-                                className="w-full bg-white text-black text-lg sm:text-xl font-black py-5 sm:py-6 rounded-2xl sm:rounded-3xl shadow-2xl mt-8 sm:mt-10 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-white/5 tracking-tighter uppercase"
-                            >
-                                PLACE ORDER
-                            </button>
+                            {/* Payment Method Selector */}
+                            <div className="mt-6 flex gap-3 p-1 bg-white/10 rounded-2xl border border-white/10">
+                                <button 
+                                    onClick={() => setPaymentMethod("COD")}
+                                    className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${paymentMethod === 'COD' ? 'bg-white text-black' : 'text-gray-400'}`}
+                                >
+                                    Cash on Delivery
+                                </button>
+                                <button 
+                                    onClick={() => setPaymentMethod("Stripe")}
+                                    className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${paymentMethod === 'Stripe' ? 'bg-white text-black' : 'text-gray-400'}`}
+                                >
+                                    Online Payment
+                                </button>
+                            </div>
+
+
+                            {clientSecret ? (
+                                <div className="mt-8 p-6 bg-white rounded-3xl shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <h2 className="text-xl font-black mb-1 uppercase tracking-tighter text-black">Complete Payment</h2>
+                                    <p className="text-[10px] text-gray-400 font-bold mb-6 uppercase tracking-widest">Secure Online Checkout via Stripe (Card/UPI)</p>
+                                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                                        <StripePaymentForm 
+                                            amount={remainingAmount}
+                                            onCancel={() => setClientSecret(null)}
+                                            onSuccess={executeOrderPlacement}
+                                        />
+                                    </Elements>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setModalOpen(true)}
+                                    className="w-full bg-white text-black text-lg sm:text-xl font-black py-5 sm:py-6 rounded-2xl sm:rounded-3xl shadow-2xl mt-8 sm:mt-10 hover:bg-gray-50 active:scale-[0.98] transition-all shadow-white/5 tracking-tighter uppercase"
+                                >
+                                    PLACE ORDER
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
+
 
                 {/* Confirm Modal */}
                 {modalOpen && (
                     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
                         <div className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-2xl max-w-sm w-full text-center animate-in zoom-in duration-300 border-t-8 border-indigo-600 relative">
                             <h2 className="text-3xl font-black mb-1 tracking-tighter uppercase">Final Step!</h2>
-                            <p className="text-xs text-gray-400 font-bold mb-8 uppercase tracking-widest">Confirm your payment split</p>
+                            <p className="text-xs text-gray-400 font-bold mb-8 uppercase tracking-widest">
+                                {clientSecret ? "Complete Secure Payment" : "Confirm your payment split"}
+                            </p>
                             
                             <div className="bg-gray-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl space-y-3 text-left mb-6 sm:mb-8 border border-gray-100">
                                 {walletAmount > 0 && (
@@ -364,17 +432,18 @@ const Checkout = () => {
                                 )}
                                 {remainingAmount > 0 && (
                                     <div className="flex justify-between items-center pb-2 border-b border-gray-200 border-dashed">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase">COD Pay</span>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">{paymentMethod === 'Stripe' ? 'Stripe Pay' : 'COD Pay'}</span>
                                         <span className="font-black">₹{remainingAmount}</span>
                                     </div>
                                 )}
+
                                 <div className="flex justify-between items-center pt-2">
                                     <span className="text-[10px] font-bold text-indigo-600 uppercase">Wallet Cashback</span>
                                     <span className="font-black text-indigo-600">+ ₹{cashback}</span>
                                 </div>
                             </div>
                             
-                            <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-3 text-left">
                                 <SwipeConfirm 
                                     onConfirm={handlePlaceOrder} 
                                     isLoading={loading} 
@@ -389,7 +458,9 @@ const Checkout = () => {
                             </div>
                         </div>
                     </div>
+
                 )}
+
             </div>
         </div>
     );

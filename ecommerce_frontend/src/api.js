@@ -1,7 +1,8 @@
 import axios from "axios";
 
-const API_BASE_URL = `http://${window.location.hostname}:5000/api`;
-export const SOCKET_URL = `http://${window.location.hostname}:5000`;
+const API_BASE_URL = "/api";
+export const SOCKET_URL = ""; // Relative to the same host
+
 
 const API = axios.create({
   baseURL: API_BASE_URL,

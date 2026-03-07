@@ -2,12 +2,21 @@ import React, { useState } from "react";
 import { useWallet } from "../../context/WalletContext";
 import { ScaleLoader } from "react-spinners";
 import toast from "react-hot-toast";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import StripePaymentForm from "../../components/StripePaymentForm";
+import API from "../../api";
+
+const stripePromise = loadStripe("pk_test_51T8B300RRLfV2lf2WlmhAXONTdX3zuDP234y2H52YPdAcppz9y22MDQXvddiQRt0YNNkwU9AUrCVmt6ifindUFbb00jyFPyGku");
+
 
 const Wallet = () => {
   const { balance, loading, transactions, fetchingTransactions, fetchTransactions, addFunds, withdrawFunds } = useWallet();
   const [amount, setAmount] = useState("");
   const [processing, setProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState("deposit"); // deposit | withdraw
+  const [clientSecret, setClientSecret] = useState(null);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,22 +24,45 @@ const Wallet = () => {
 
     setProcessing(true);
     try {
-      if (activeTab === "deposit") {
-        await addFunds(Number(amount));
-      } else {
+    if (activeTab === "deposit") {
+      try {
+        const res = await API.post("/payment/create-intent", { amount: Number(amount) });
+        setClientSecret(res.data.clientSecret);
+      } catch (err) {
+        toast.error("Failed to initiate payment");
+      }
+    } else {
+      try {
         if (Number(amount) > balance) {
           toast.error("Insufficient balance");
           return;
         }
         await withdrawFunds(Number(amount));
+        setAmount("");
+      } catch (err) {
+        // toast shown in context
       }
+    }
+  } catch (err) {
+    console.error("Wallet Action Error:", err);
+  } finally {
+    setProcessing(false);
+  }
+};
+
+  const handleStripeSuccess = async () => {
+    try {
+      setProcessing(true);
+      await addFunds(Number(amount));
       setAmount("");
+      setClientSecret(null);
     } catch (err) {
-      // toast shown in context
+      toast.error("Success confirmed but sync failed. Please refresh.");
     } finally {
       setProcessing(false);
     }
   };
+
 
   if (loading) {
     return (
@@ -90,51 +122,70 @@ const Wallet = () => {
               : "Withdraw funds to original source."}
           </p>
           
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            <div>
-              <label className="block text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1.5 sm:mb-2 italic">Transfer Amount (₹)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-sm">₹</span>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full pl-8 pr-4 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 transition font-black text-sm sm:text-lg"
-                />
-              </div>
+          {clientSecret ? (
+            <div className="animate-in fade-in duration-500">
+               <h2 className="text-xl sm:text-2xl font-black mb-2 uppercase italic tracking-tighter">Secure Payment</h2>
+               <p className="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest leading-loose italic">Pay ₹{amount} via Card or UPI</p>
+               
+               <Elements stripe={stripePromise} options={{ clientSecret }}>
+                 <StripePaymentForm 
+                   amount={amount} 
+                   onCancel={() => setClientSecret(null)} 
+                   onSuccess={handleStripeSuccess}
+                 />
+               </Elements>
             </div>
-
-            {activeTab === 'deposit' && (
-              <div className="flex flex-wrap gap-1.5">
-                {[500, 1000, 2000, 5000].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setAmount(amt)}
-                    className="px-3 py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-widest bg-gray-50 border border-gray-100 rounded-lg hover:bg-black hover:text-white transition-all active:scale-90"
-                  >
-                    +₹{amt}
-                  </button>
-                ))}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <div>
+                <label className="block text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1.5 sm:mb-2 italic">Transfer Amount (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-sm">₹</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full pl-8 pr-4 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-4 focus:ring-black/5 transition font-black text-sm sm:text-lg"
+                  />
+                </div>
               </div>
-            )}
 
-            <button
-              disabled={processing}
-              className={`w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${
-                processing 
-                  ? "bg-gray-100 text-gray-400" 
-                  : activeTab === 'deposit' 
-                    ? "bg-black text-white hover:opacity-90 active:scale-95 shadow-black/10"
-                    : "bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-red-100"
-              }`}
-            >
-              {processing ? "Processing..." : activeTab === 'deposit' ? "Confirm Deposit" : "Confirm Withdrawal"}
-            </button>
-          </form>
+              {activeTab === 'deposit' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {[500, 1000, 2000, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setAmount(amt)}
+                      className="px-3 py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-widest bg-gray-50 border border-gray-100 rounded-lg hover:bg-black hover:text-white transition-all active:scale-90"
+                    >
+                      +₹{amt}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <button
+                disabled={processing}
+                className={`w-full py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${
+                  processing 
+                    ? "bg-gray-100 text-gray-400" 
+                    : activeTab === 'deposit' 
+                      ? "bg-black text-white hover:opacity-90 active:scale-95 shadow-black/10"
+                      : "bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-red-100"
+                }`}
+              >
+                {processing && activeTab !== 'deposit' ? "Processing..." : activeTab === 'deposit' ? "Confirm Deposit" : "Confirm Withdrawal"}
+              </button>
+            </form>
+          )}
         </div>
       </div>
+
+
+
+
 
       {/* Transaction History */}
       <div className="bg-white rounded-[2rem] sm:rounded-[40px] shadow-sm border border-gray-100 overflow-hidden">
