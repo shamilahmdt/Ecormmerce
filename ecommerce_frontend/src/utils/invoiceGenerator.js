@@ -33,9 +33,9 @@ export const generateInvoice = (orders) => {
   doc.setFontSize(28);
   doc.text("ECOMMERCE", 14, 25);
   
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("PREMIUM ACQUISITION RECEIPT", 14, 32);
+  // doc.setFontSize(10);
+  // doc.setFont("helvetica", "normal");
+  // doc.text("PREMIUM ACQUISITION RECEIPT", 14, 32);
   
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");

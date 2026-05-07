@@ -5,8 +5,9 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../../api";
-import { FaDownload } from "react-icons/fa";
+import { FaDownload, FaCheckCircle, FaTruck, FaBox, FaTimesCircle, FaInfoCircle, FaExclamationCircle } from "react-icons/fa";
 import { generateInvoice } from "../../utils/invoiceGenerator";
+import { motion, AnimatePresence } from "framer-motion";
 
 const formatDate = (dateInput) => {
   if (!dateInput) return "-";
@@ -45,6 +46,7 @@ const OrderList = () => {
     type: "", // "cancel" or "return"
   });
   const [actionReason, setActionReason] = useState("");
+  const [activeTracking, setActiveTracking] = useState(null); // Stores displayOrderId
 
   const fetchOrders = async (page = 1, date = filterDate) => {
     setLoading(true);
@@ -235,20 +237,137 @@ const OrderList = () => {
                       <p className="font-black text-sm sm:text-lg">#{order.displayOrderId || order.orderId}</p>
                       <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 mt-0.5 sm:mt-1 uppercase">{formatDate(order.date || order.CREATED_AT)}</p>
                     </div>
-                    <span
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 ${
-                        order.status === "Cancelled" ? "bg-red-100 text-red-500" :
-                        order.status === "ReturnProduct" ? "bg-orange-100 text-orange-500" :
-                        order.status === "Refund Proceed" ? "bg-purple-100 text-purple-600" :
-                        order.status === "Refunded" ? "bg-indigo-100 text-indigo-600" :
-                        order.status === "Delivered" ? "bg-green-100 text-green-600" :
-                        order.status === "Dispatched" ? "bg-blue-100 text-blue-600" :
-                        "bg-yellow-100 text-yellow-600"
-                      }`}
-                    >
-                      {order.status || "Pending"}
-                    </span>
+                    <div className="relative group/status">
+                      <button
+                        onClick={() => setActiveTracking(activeTracking === (order.displayOrderId || order.orderId) ? null : (order.displayOrderId || order.orderId))}
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest shrink-0 transition-all flex items-center gap-2 group hover:scale-105 active:scale-95 ${
+                          order.status === "Cancelled" ? "bg-red-100 text-red-500 hover:bg-red-200" :
+                          order.status === "ReturnProduct" ? "bg-orange-100 text-orange-500 hover:bg-orange-200" :
+                          order.status === "Refund Proceed" ? "bg-purple-100 text-purple-600 hover:bg-purple-200" :
+                          order.status === "Refunded" ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200" :
+                          order.status === "Delivered" ? "bg-green-100 text-green-600 hover:bg-green-200" :
+                          order.status === "Dispatched" ? "bg-blue-100 text-blue-600 hover:bg-blue-200" :
+                          "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+                        }`}
+                      >
+                        {order.status || "Pending"}
+                        <FaInfoCircle className="text-[7px] opacity-40 group-hover:opacity-100" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Visual Tracking Bar */}
+                  <AnimatePresence>
+                    {activeTracking === (order.displayOrderId || order.orderId) && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+                        animate={{ height: "auto", opacity: 1, marginBottom: 24 }}
+                        exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+                        className="overflow-hidden"
+                      >
+                        {order.status === "Cancelled" ? (
+                          <div className="p-8 sm:p-12 bg-white rounded-[32px] border-2 border-red-500/10 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden group/void">
+                            {/* Watermark */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] rotate-12 pointer-events-none">
+                                <FaTimesCircle className="text-[200px] text-red-600" />
+                            </div>
+                            
+                            <div className="relative z-10 w-full">
+                                <motion.div 
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100"
+                                >
+                                  <FaExclamationCircle className="text-red-500 text-2xl" />
+                                </motion.div>
+                                
+                                <h4 className="text-lg sm:text-xl font-black uppercase tracking-[0.4em] text-red-600 mb-2 italic">Official Void Notice</h4>
+                                <div className="h-[2px] w-16 bg-red-100 mx-auto mb-6" />
+                                
+                                <p className="text-[10px] sm:text-xs text-gray-400 uppercase font-bold tracking-widest leading-relaxed max-w-sm mx-auto mb-8">
+                                    The acquisition protocol for receipt <span className="text-red-500 font-black">#{order.displayOrderId || order.orderId}</span> has been formally terminated and moved to administrative archives.
+                                </p>
+
+                                {order.cancelReason && (
+                                    <div className="p-5 sm:p-6 bg-red-50/50 rounded-2xl border border-red-100/50 inline-block w-full max-w-sm">
+                                        <span className="text-[7px] font-black uppercase tracking-widest text-red-300 block mb-2 underline decoration-red-200">Termination Cause Logged</span>
+                                        <p className="text-[11px] sm:text-[13px] font-black text-red-700 italic leading-snug">"{order.cancelReason}"</p>
+                                    </div>
+                                )}
+
+                                <div className="mt-10 pt-8 border-t border-gray-100 grid grid-cols-2 gap-8">
+                                    <div className="text-center group/item transition-transform hover:scale-105">
+                                        <p className="text-[7px] font-black text-gray-300 uppercase tracking-widest mb-1">Log Status</p>
+                                        <p className="text-[10px] font-black text-red-500 uppercase italic">Voided Archive</p>
+                                    </div>
+                                    <div className="text-center group/item transition-transform hover:scale-105">
+                                        <p className="text-[7px] font-black text-gray-300 uppercase tracking-widest mb-1">Financial State</p>
+                                        <p className="text-[10px] font-black text-indigo-600 uppercase italic">Wallet Restored</p>
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                  onClick={() => setActiveTracking(null)}
+                                  className="mt-10 text-[8px] font-black uppercase tracking-[0.3em] text-gray-300 hover:text-black transition-colors"
+                                >
+                                  Dismiss Record
+                                </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="px-4 py-8 bg-gray-50/50 rounded-2xl border border-gray-100 relative shadow-inner">
+                            <div className="relative flex justify-between items-center max-w-sm mx-auto">
+                              {/* Background Line */}
+                              <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gray-200 -translate-y-1/2 z-0" />
+                              
+                              {/* Active Progress Line */}
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ 
+                                  width: order.status === "Delivered" ? "100%" : 
+                                         order.status === "Dispatched" ? "50%" : "0%" 
+                                }}
+                                transition={{ duration: 0.8, ease: "circOut" }}
+                                className="absolute top-1/2 left-0 h-[2px] bg-black -translate-y-1/2 z-0 shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+                              />
+
+                              {/* Stages */}
+                              {[
+                                { label: "Ordered", icon: <FaBox />, statusKey: "Pending" },
+                                { label: "Dispatched", icon: <FaTruck />, statusKey: "Dispatched" },
+                                { label: "Delivered", icon: <FaCheckCircle />, statusKey: "Delivered" }
+                              ].map((stage, idx) => {
+                                const isCompleted = (idx === 0) || 
+                                                   (idx === 1 && ["Dispatched", "Delivered", "Ready to Deliver"].includes(order.status)) || 
+                                                   (idx === 2 && order.status === "Delivered");
+                                
+                                const isCurrent = (idx === 0 && ["Pending", "Processing"].includes(order.status)) ||
+                                                  (idx === 1 && order.status === "Dispatched") ||
+                                                  (idx === 2 && order.status === "Delivered");
+
+                                return (
+                                  <div key={idx} className="relative z-10 flex flex-col items-center">
+                                    <div 
+                                      className={`w-8 h-8 rounded-full border-2 bg-white flex items-center justify-center transition-all duration-700 ${
+                                        isCompleted ? "border-black text-black" : "border-gray-200 text-gray-300"
+                                      } ${isCurrent ? "scale-110 shadow-lg ring-4 ring-gray-100" : ""}`}
+                                    >
+                                      <span className="text-[10px]">{stage.icon}</span>
+                                    </div>
+                                    <span className={`absolute -bottom-6 text-[7px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-colors duration-500 ${
+                                      isCompleted ? "text-black" : "text-gray-400"
+                                    }`}>
+                                      {stage.label}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Product Info */}
                   <div className="flex gap-3 sm:gap-6 items-center bg-gray-50 p-3 sm:p-4 rounded-xl sm:rounded-2xl mb-4 sm:mb-6">

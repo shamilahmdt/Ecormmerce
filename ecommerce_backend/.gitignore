@@ -33,6 +33,10 @@ firebase-debug.log
 .firebaserc
 serviceAccountKey.json
 
+# Extra ignores
+logs.txt
+err.txt
+
 # OS / Editor
 .DS_Store
 Thumbs.db
