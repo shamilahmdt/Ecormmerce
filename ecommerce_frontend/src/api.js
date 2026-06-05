@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = "/api";
-export const SOCKET_URL = ""; // Relative to the same host
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || ""; // Relative to the same host in dev, absolute in prod
 
 
 const API = axios.create({
