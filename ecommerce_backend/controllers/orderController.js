@@ -175,8 +175,78 @@ async function processAction(ref, data, type, reason, ioInstance) {
   });
 }
 
+const updateOrderStatus = (io) => async (req, res) => {
+  const { orderId } = req.params;
+  const { status, cancelReason } = req.body;
+
+  try {
+    let orderRef = db.collection("orders").doc(orderId);
+    let orderDoc = await orderRef.get();
+    if (!orderDoc.exists) {
+      const snap = await db.collection("orders").where("displayOrderId", "==", orderId).get();
+      if (snap.empty) return res.status(404).json({ error: "Order not found" });
+      orderDoc = snap.docs[0];
+      orderRef = orderDoc.ref;
+    }
+    const orderData = orderDoc.data();
+    const oldStatus = orderData.status;
+
+    const updates = { status };
+    if (status === "Cancelled") {
+      updates.cancelReason = cancelReason || "";
+      // If it wasn't already cancelled, restore the stock
+      if (oldStatus !== "Cancelled") {
+        const item = orderData.items?.[0];
+        if (item && item.id) {
+          await db.collection("products").doc(item.id).update({
+            stock: admin.firestore.FieldValue.increment(item.quantity)
+          });
+        }
+      }
+    }
+
+    if (status === "Refunded" && oldStatus !== "Refunded") {
+      // Refund to wallet
+      const userRef = db.collection("users").doc(orderData.userPhone);
+      const userDoc = await userRef.get();
+      if (userDoc.exists) {
+        const currentBalance = userDoc.data().walletBalance || 0;
+        const newBalance = currentBalance + orderData.total;
+        await userRef.update({ walletBalance: newBalance });
+
+        // Record transaction
+        await db.collection("transactions").add({
+          userPhone: orderData.userPhone,
+          type: "Credit",
+          description: `Refund for Order #${orderData.displayOrderId || orderData.id}`,
+          amount: orderData.total,
+          date: new Date().toISOString()
+        });
+
+        // Emit socket event for wallet update
+        io.emit("wallet-updated", { userPhone: orderData.userPhone, newBalance });
+      }
+    }
+
+    await orderRef.update(updates);
+
+    // Emit order status update to socket.io
+    io.emit("order-status-updated", {
+      orderId: orderData.id,
+      displayOrderId: orderData.displayOrderId,
+      status,
+      total: orderData.total
+    });
+
+    res.json({ message: "Order status updated successfully", order: { ...orderData, ...updates } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getOrders,
-  orderAction
+  orderAction,
+  updateOrderStatus
 };

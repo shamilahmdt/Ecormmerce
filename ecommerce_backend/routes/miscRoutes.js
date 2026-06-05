@@ -17,6 +17,7 @@ router.delete("/wishlist", authenticate, cartWishlistController.clearWishlist);
 
 // Admin
 router.get("/admin/analytics", authenticate, isAdmin, adminController.getAnalytics);
+router.get("/admin/orders", authenticate, isAdmin, adminController.getAdminOrders);
 
 // Payments & Coupons
 router.post("/payment/create-intent", authenticate, miscController.createPaymentIntent);
