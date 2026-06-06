@@ -15,17 +15,34 @@ const orderRoutes = require("./routes/orderRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 const miscRoutes = require("./routes/miscRoutes");
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://ecormmerce-web.vercel.app"
+];
+
+if (process.env.FRONTEND_URL) {
+  const urls = process.env.FRONTEND_URL.split(",").map(url => url.trim());
+  allowedOrigins.push(...urls);
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(bodyParser.json({ limit: "50mb" }));
 
 // Socket.io connection
