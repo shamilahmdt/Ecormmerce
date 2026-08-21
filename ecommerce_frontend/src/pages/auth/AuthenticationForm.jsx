@@ -176,7 +176,7 @@ export default function AuthenticationForm() {
         {/* Guest Option */}
         <div className="mt-4">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/guest-home")}
             className="w-full border-2 border-black text-black py-2 rounded font-bold hover:bg-black hover:text-white transition"
           >
             Continue as Guest

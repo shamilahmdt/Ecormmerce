@@ -84,7 +84,7 @@ function App() {
             element={
               user?.role === "admin" 
               ? <Navigate to="/dashboard" replace /> 
-              : (user ? <ProductList /> : <GuestHome />)
+              : (user ? <ProductList /> : <Navigate to="/auth" replace />)
             } 
           />
           <Route path="/cart" element={user ? <Cart /> : <GuestCart />} />
